@@ -106,26 +106,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
               const SizedBox(height: 24),
 
-              // Статистика по типам животных
-              const Text(
-                'По типам животных',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              _buildPetTypesChart(
-                dogCount: dogCount,
-                catCount: catCount,
-                birdCount: birdCount,
-                otherCount: otherCount,
-              ),
-
-              const SizedBox(height: 24),
-
               // Последние объявления
               const Text(
                 'Последние объявления',

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
 
 class LocationPickerScreen extends StatefulWidget {
   final LatLng? initialLocation;
@@ -17,11 +18,59 @@ class LocationPickerScreen extends StatefulWidget {
 class _LocationPickerScreenState extends State<LocationPickerScreen> {
   late LatLng _selectedLocation;
   final MapController _mapController = MapController();
+  bool _isLoadingLocation = false;
 
   @override
   void initState() {
     super.initState();
     _selectedLocation = widget.initialLocation ?? LatLng(51.169392, 71.449074);
+  }
+
+  Future<void> _getCurrentLocation() async {
+    if (_isLoadingLocation) return;
+
+    setState(() {
+      _isLoadingLocation = true;
+    });
+
+    try {
+      // Проверяем разрешения
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw 'Необходимо разрешение на использование геолокации';
+        }
+      }
+      
+      if (permission == LocationPermission.deniedForever) {
+        throw 'Разрешение на использование геолокации отклонено навсегда';
+      }
+
+      // Получаем текущую позицию
+      final position = await Geolocator.getCurrentPosition();
+      
+      setState(() {
+        _selectedLocation = LatLng(position.latitude, position.longitude);
+        _isLoadingLocation = false;
+      });
+      
+      // Перемещаем карту к текущей позиции
+      _mapController.move(_selectedLocation, 15.0);
+    } catch (e) {
+      setState(() {
+        _isLoadingLocation = false;
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _onMapTap(TapPosition tapPosition, LatLng point) {
@@ -79,6 +128,29 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                 ],
               ),
             ],
+          ),
+          
+          // Кнопка определения текущего местоположения
+          Positioned(
+            right: 16,
+            bottom: 100,
+            child: FloatingActionButton(
+              backgroundColor: Colors.white,
+              onPressed: _getCurrentLocation,
+              child: _isLoadingLocation
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFEE8A9A)),
+                      ),
+                    )
+                  : const Icon(
+                      Icons.my_location,
+                      color: Color(0xFFEE8A9A),
+                    ),
+            ),
           ),
           
           // Информационная панель

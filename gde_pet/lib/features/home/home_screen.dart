@@ -94,7 +94,20 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Row(
         children: [
-          const CircleAvatar(radius: 24, backgroundColor: Colors.white),
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: Colors.grey[200],
+            backgroundImage: profileProvider.profile?.photoURL != null
+                ? NetworkImage(profileProvider.profile!.photoURL!)
+                : null,
+            child: profileProvider.profile?.photoURL == null
+                ? const Icon(
+                    Icons.person,
+                    size: 24,
+                    color: Colors.grey,
+                  )
+                : null,
+          ),
           const SizedBox(width: 12),
           Text(
             'Привет, $userName',

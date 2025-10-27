@@ -221,32 +221,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                
-                const SizedBox(height: 16),
-                
-                // Вход через телефон
-                SizedBox(
-                  height: 56,
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const PhoneLoginScreen(),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.phone, size: 24),
-                    label: const Text('Войти через телефон'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF1E1E1E),
-                      side: const BorderSide(color: Color(0xFF1E1E1E)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30.0),
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),

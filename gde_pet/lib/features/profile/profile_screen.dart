@@ -122,7 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           IconButton(
             icon: const Icon(
-              Icons.notifications_active_outlined,
+              Icons.notifications_none_outlined,
               color: Colors.black,
               size: 28,
             ),
@@ -144,18 +144,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   CircleAvatar(
                     radius: 60,
-                    backgroundColor: const Color(0xFFE8FF8E),
+                    backgroundColor: Colors.grey[200],
                     backgroundImage: profile?.photoURL != null
                         ? NetworkImage(profile!.photoURL!)
                         : null,
                     child: profile?.photoURL == null
-                        ? Text(
-                            initials,
-                            style: const TextStyle(
-                              fontSize: 36,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
+                        ? const Icon(
+                            Icons.person,
+                            size: 60,
+                            color: Colors.grey,
                           )
                         : null,
                   ),
