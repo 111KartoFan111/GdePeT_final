@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../providers/pet_provider.dart';
 import '../../models/pet_model.dart';
 import '../home/pet_detail_screen.dart';
+import '../profile/favorites_screen.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -94,10 +95,17 @@ class _MapScreenState extends State<MapScreen> {
         leading: IconButton(
           icon: const Icon(
             Icons.favorite_border,
-            color: Colors.black,
+            color: Color(0xFFEE8A9A),
             size: 28,
           ),
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const FavoritesScreen(),
+              ),
+            );
+          },
         ),
         title: const Text(
           'Карта',
@@ -108,12 +116,6 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.black, size: 28),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: Stack(
         children: [
