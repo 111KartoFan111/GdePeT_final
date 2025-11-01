@@ -4,7 +4,7 @@ import '../../providers/pet_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../home/home_screen.dart';
 import '../../models/pet_model.dart';
-import '../profile/pet_management_screen.dart';
+import '../add/edit_pet_screen.dart';
 
 class UserPetsScreen extends StatefulWidget {
   const UserPetsScreen({super.key});
@@ -90,25 +90,24 @@ class _UserPetsScreenState extends State<UserPetsScreen> {
     final color = pet.status == PetStatus.lost
         ? const Color(0xFFEE8A9A)
         : const Color(0xFFD6C9FF);
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PetManagementScreen(pet: pet),
-          ),
-        ).then((result) {
+      return GestureDetector(
+        onTap: () async {
+          final result = await Navigator.push<bool?>(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EditPetScreen(pet: pet),
+            ),
+          );
           if (result == true) {
-            _loadUserPets();
+            _loadUserPets(); // Обновляем список после изменений
           }
-        });
-      },
-      child: PetCard(
-        petModel: pet,
-        color: color,
-        title: pet.petName,
-        location: pet.address ?? 'На карте',
-      ),
-    );
+        },
+        child: PetCard(
+          petModel: pet,
+          color: color,
+          title: pet.petName,
+          location: pet.address ?? 'На карте',
+        ),
+      );
   }
 }
