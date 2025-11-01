@@ -130,6 +130,21 @@ class AuthService {
     }
   }
 
+  // Отправить письмо для верификации email
+  Future<void> sendEmailVerification() async {
+    try {
+      await currentUser?.sendEmailVerification();
+    } catch (e) {
+      throw 'Ошибка отправки письма: $e';
+    }
+  }
+
+  // Проверить, верифицирован ли email
+  Future<bool> isEmailVerified() async {
+    await currentUser?.reload();
+    return currentUser?.emailVerified ?? false;
+  }
+
   // Восстановление пароля
   Future<void> resetPassword(String email) async {
     try {

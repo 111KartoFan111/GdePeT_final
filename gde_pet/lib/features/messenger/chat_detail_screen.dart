@@ -100,15 +100,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   Widget _buildMessageComposer() {
     return Container(
       margin: const EdgeInsets.all(16.0),
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30.0),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 5,
+            spreadRadius: 2,
+            blurRadius: 8,
           )
         ]
       ),
@@ -117,16 +117,25 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           Expanded(
             child: TextField(
               controller: _messageController,
+              style: const TextStyle(fontSize: 16),
               decoration: const InputDecoration.collapsed(
                 hintText: 'Введите сообщение...',
-                hintStyle: TextStyle(color: Colors.grey),
+                hintStyle: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 16,
+                ),
               ),
               onSubmitted: (_) => _sendMessage(),
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.send, color: Color(0xFFEE8A9A)),
+            icon: const Icon(
+              Icons.send,
+              color: Color(0xFFEE8A9A),
+              size: 28,
+            ),
             onPressed: _sendMessage,
+            padding: const EdgeInsets.all(8.0),
           ),
         ],
       ),

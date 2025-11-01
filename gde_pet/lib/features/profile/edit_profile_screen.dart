@@ -243,20 +243,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   children: [
                     CircleAvatar(
                       radius: 60,
-                      backgroundColor: const Color(0xFFE8FF8E),
+                      backgroundColor: Colors.grey[200],
                       backgroundImage: _imageFile != null
                           ? FileImage(_imageFile!)
                           : (profile?.photoURL != null
                               ? NetworkImage(profile!.photoURL!)
                               : null) as ImageProvider?,
                       child: (_imageFile == null && profile?.photoURL == null)
-                          ? Text(
-                              profile?.initials ?? 'П',
-                              style: const TextStyle(
-                                fontSize: 36,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
+                          ? const Icon(
+                              Icons.person,
+                              size: 60,
+                              color: Colors.grey,
                             )
                           : null,
                     ),
