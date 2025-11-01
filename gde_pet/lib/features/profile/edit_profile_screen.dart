@@ -71,6 +71,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text('Ошибка выбора изображения: $e'),
             backgroundColor: Colors.red,
           ),
@@ -135,6 +137,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
           content: Text(
             success
                 ? 'Фото удалено'
@@ -164,6 +168,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (!photoSuccess && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text(profileProvider.error ?? 'Ошибка загрузки фото'),
             backgroundColor: Colors.red,
           ),
@@ -187,6 +193,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text('Профиль обновлен'),
             backgroundColor: Colors.green,
           ),
@@ -195,6 +203,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text(
               profileProvider.error ?? 'Ошибка обновления профиля',
             ),
@@ -335,6 +345,48 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   return null;
                 },
               ),
+              const SizedBox(height: 24),
+              if (authProvider.user?.email != null)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.email_outlined, color: Colors.grey),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Email',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            Text(
+                              authProvider.user!.email!,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (!authProvider.user!.emailVerified)
+                        const Icon(
+                          Icons.warning_amber,
+                          color: Colors.orange,
+                          size: 20,
+                        ),
+                    ],
+                  ),
+                ),
 
               const SizedBox(height: 24),
 
@@ -447,50 +499,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
 
               const SizedBox(height: 16),
-
-              // Email (не редактируется)
-              if (authProvider.user?.email != null)
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.email_outlined, color: Colors.grey),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Email',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            Text(
-                              authProvider.user!.email!,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (!authProvider.user!.emailVerified)
-                        const Icon(
-                          Icons.warning_amber,
-                          color: Colors.orange,
-                          size: 20,
-                        ),
-                    ],
-                  ),
-                ),
-            ],
+              ],
           ),
         ),
       ),

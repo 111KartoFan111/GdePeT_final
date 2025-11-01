@@ -66,6 +66,8 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text('Ошибка определения местоположения: $e'),
             backgroundColor: Colors.orange,
           ),
@@ -82,6 +84,8 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text('Не удалось совершить звонок'),
             backgroundColor: Colors.red,
           ),
@@ -100,6 +104,8 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text('WhatsApp недоступен'),
             backgroundColor: Colors.red,
           ),
@@ -116,6 +122,8 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text('Не удалось открыть сайт'),
             backgroundColor: Colors.red,
           ),
@@ -135,6 +143,8 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text('Не удалось открыть карты'),
             backgroundColor: Colors.red,
           ),

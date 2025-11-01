@@ -52,8 +52,10 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     await authProvider.sendEmailVerification();
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
           content: Text('Письмо отправлено повторно'),
           backgroundColor: Colors.green,
         ),

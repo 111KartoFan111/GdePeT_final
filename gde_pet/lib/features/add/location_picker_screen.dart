@@ -63,8 +63,10 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       });
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text('Ошибка: $e'),
             backgroundColor: Colors.red,
           ),

@@ -53,6 +53,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         SnackBar(
           content: Text(authProvider.error!),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
         ),
       );
     }
@@ -98,7 +100,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _nameController,
-                  decoration: const InputDecoration(hintText: 'Adina'),
+                  decoration: const InputDecoration(hintText: 'Имя'),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Введите имя';
@@ -120,7 +122,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _surnameController,
-                  decoration: const InputDecoration(hintText: 'Hanma'),
+                  decoration: const InputDecoration(hintText: 'Фамилия'),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Введите фамилию';
@@ -143,7 +145,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _phoneController,
                   decoration: const InputDecoration(
-                    hintText: '+7 776 177 22 48',
+                    hintText: 'Номер телефона',
                   ),
                   keyboardType: TextInputType.phone,
                 ),

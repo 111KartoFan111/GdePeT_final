@@ -8,6 +8,7 @@ import 'edit_profile_screen.dart';
 import 'user_pets_screen.dart';
 import 'favorites_screen.dart';
 import '../auth/welcome_screen.dart';
+import 'package:gde_pet/features/notifications/notifications_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -121,12 +122,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(
-              Icons.notifications_none_outlined,
-              color: Colors.black,
-              size: 28,
-            ),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationsScreen(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.notifications_none_outlined, size: 28),
           ),
         ],
       ),
@@ -271,13 +275,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   );
                 },
               ),
-              
-              _buildProfileMenuItem(
-                icon: Icons.settings_outlined,
-                text: 'Настройки',
-                onTap: () {},
-              ),
-              
               const SizedBox(height: 24),
               
               SizedBox(

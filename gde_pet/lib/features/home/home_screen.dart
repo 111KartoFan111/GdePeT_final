@@ -49,8 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final petProvider = context.watch<PetProvider>();
-    final favoritesProvider = context.watch<FavoritesProvider>();
+  final petProvider = context.watch<PetProvider>();
     
     // Фильтруем по статусу ПОСЛЕ загрузки всех питомцев
     final lostPets = petProvider.pets
@@ -86,9 +85,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final authProvider = context.watch<AuthProvider>();
     final profileProvider = context.watch<ProfileProvider>();
     
-    final userName = profileProvider.profile?.displayName ?? 
-        authProvider.userModel?.displayName ?? 
-        'Пользователь';
+  final displayName = profileProvider.profile?.displayName ??
+    authProvider.userModel?.displayName ??
+    'Пользователь';
+  final firstName = displayName.trim().isEmpty
+    ? 'Пользователь'
+    : displayName.trim().split(RegExp(r'\s+'))[0];
     
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -110,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(width: 12),
           Text(
-            'Привет, $userName',
+            'Привет, $firstName',
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const Spacer(),

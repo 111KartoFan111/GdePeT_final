@@ -39,8 +39,10 @@ class _LoginScreenState extends State<LoginScreen> {
         (route) => false,
       );
     } else if (authProvider.error != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
           content: Text(authProvider.error!),
           backgroundColor: Colors.red,
         ),
@@ -59,8 +61,10 @@ class _LoginScreenState extends State<LoginScreen> {
         (route) => false,
       );
     } else if (authProvider.error != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
           content: Text(authProvider.error!),
           backgroundColor: Colors.red,
         ),
@@ -273,8 +277,10 @@ void _showResetPasswordDialog() {
           onPressed: () async {
             final email = emailController.text.trim();
             if (email.isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(
+                ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
+                  behavior: SnackBarBehavior.floating,
+                  margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
                   content: Text('Введите email'),
                   backgroundColor: Colors.orange,
                 ),
@@ -283,8 +289,10 @@ void _showResetPasswordDialog() {
             }
             
             if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
-              ScaffoldMessenger.of(context).showSnackBar(
+                ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
+                  behavior: SnackBarBehavior.floating,
+                  margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
                   content: Text('Введите корректный email'),
                   backgroundColor: Colors.orange,
                 ),
@@ -297,13 +305,15 @@ void _showResetPasswordDialog() {
             
             if (mounted) {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
+                ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
                     success
                         ? 'Письмо для восстановления отправлено на $email'
                         : 'Ошибка отправки письма. Проверьте email',
                   ),
+                  behavior: SnackBarBehavior.floating,
+                  margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
                   backgroundColor: success ? Colors.green : Colors.red,
                   duration: const Duration(seconds: 3),
                 ),

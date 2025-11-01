@@ -30,6 +30,8 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
         const SnackBar(
           content: Text('Введите номер телефона'),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
         ),
       );
       return;
@@ -47,6 +49,8 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
           const SnackBar(
             content: Text('Код отправлен на ваш телефон'),
             backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
           ),
         );
       }
@@ -55,6 +59,8 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
         SnackBar(
           content: Text(authProvider.error!),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
         ),
       );
     }
@@ -66,7 +72,9 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
         const SnackBar(
           content: Text('Введите код'),
           backgroundColor: Colors.red,
-        ),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
+          ),
       );
       return;
     }
@@ -85,7 +93,9 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
         SnackBar(
           content: Text(authProvider.error!),
           backgroundColor: Colors.red,
-        ),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
+          ),
       );
     }
   }

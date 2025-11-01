@@ -38,8 +38,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       await batch.commit();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text('Все уведомления отмечены как прочитанные'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
@@ -56,8 +58,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       await _firestore.collection('notifications').doc(notificationId).delete();
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text('Уведомление удалено'),
             backgroundColor: Colors.grey,
             duration: Duration(seconds: 1),
@@ -107,8 +111,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       await batch.commit();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text('Все уведомления удалены'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),

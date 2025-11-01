@@ -20,6 +20,41 @@ class PetDetailScreen extends StatefulWidget {
   State<PetDetailScreen> createState() => _PetDetailScreenState();
 }
 
+class FullscreenImagePage extends StatelessWidget {
+  final String imageUrl;
+  final String tag;
+
+  const FullscreenImagePage({super.key, required this.imageUrl, required this.tag});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Center(
+        child: InteractiveViewer(
+          child: Hero(
+            tag: tag,
+            child: imageUrl.startsWith('assets/')
+                ? Image.asset(imageUrl, fit: BoxFit.contain)
+                : Image.network(
+                    imageUrl,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Image.asset('assets/images/pet_image_placeholder.png', fit: BoxFit.contain);
+                    },
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _PetDetailScreenState extends State<PetDetailScreen> {
 
 // Улучшенная функция "Поделиться" с поддержкой iOS/iPad
@@ -84,6 +119,8 @@ void _sharePet() async {
               ),
             ],
           ),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 3),
           action: SnackBarAction(
@@ -94,8 +131,20 @@ void _sharePet() async {
         ),
       );
     }
+    }
   }
-}
+
+  void _openFullImage(String imageUrl) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FullscreenImagePage(
+          imageUrl: imageUrl,
+          tag: 'pet-image-${widget.pet.id}',
+        ),
+      ),
+    );
+  }
 
 Future<void> _callForHelp() async {
   final pet = widget.pet;
@@ -258,6 +307,8 @@ Future<void> _callForHelp() async {
           SnackBar(
             content: Text('Не удалось открыть ${_getMethodName(method)}'),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
           ),
         );
       }
@@ -267,6 +318,8 @@ Future<void> _callForHelp() async {
           SnackBar(
             content: Text('${_getMethodName(method)} недоступен на этом устройстве'),
             backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
           ),
         );
       }
@@ -278,6 +331,8 @@ Future<void> _callForHelp() async {
         SnackBar(
           content: Text('Ошибка: $e'),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
         ),
       );
     }
@@ -304,6 +359,8 @@ String _getMethodName(String method) {
         const SnackBar(
           content: Text('Для этого действия нужно войти в аккаунт'),
           backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
         ),
       );
       return;
@@ -374,6 +431,8 @@ String _getMethodName(String method) {
           Navigator.of(context).pop(); // Закрываем диалог загрузки
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
+              behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
               content: const Text('Включите геолокацию в настройках устройства'),
               backgroundColor: Colors.orange,
               action: SnackBarAction(
@@ -398,6 +457,8 @@ String _getMethodName(String method) {
             Navigator.of(context).pop();
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
+                behavior: SnackBarBehavior.floating,
+                margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
                 content: Text('Доступ к геолокации запрещен'),
                 backgroundColor: Colors.red,
               ),
@@ -462,6 +523,8 @@ String _getMethodName(String method) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
+              behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
               content: Text('Не удалось определить местоположение. Попробуйте еще раз'),
               backgroundColor: Colors.orange,
             ),
@@ -486,6 +549,8 @@ String _getMethodName(String method) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
+              behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
               content: Text('Ошибка отправки: ${e.toString()}'),
               backgroundColor: Colors.red,
               duration: const Duration(seconds: 5),
@@ -520,6 +585,8 @@ String _getMethodName(String method) {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
               content: Text(
                 petProvider.error ?? 'Не удалось добавить отметку',
               ),
@@ -534,6 +601,8 @@ String _getMethodName(String method) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Ошибка: $e'),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             backgroundColor: Colors.red,
           ),
         );
@@ -544,7 +613,12 @@ String _getMethodName(String method) {
     final authProvider = context.read<AuthProvider>();
     if (authProvider.user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Для этого действия нужно войти в аккаунт')),
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
+          content: Text('Для этого действия нужно войти в аккаунт')
+        ),
+        
       );
       return;
     }
@@ -554,7 +628,11 @@ String _getMethodName(String method) {
 
     if (currentUserId == receiverId) {
        ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Вы не можете написать самому себе')),
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
+          content: Text('Вы не можете написать самому себе')
+        ),
       );
       return;
     }
@@ -592,19 +670,34 @@ String _getMethodName(String method) {
             height: MediaQuery.of(context).size.height * 0.65,
             width: double.infinity,
             child: widget.pet.imageUrls.isNotEmpty
-                ? Image.network(
-                    widget.pet.imageUrls.first,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Image.asset(
+                ? GestureDetector(
+                    onTap: () => _openFullImage(widget.pet.imageUrls.first),
+                    child: Hero(
+                      tag: 'pet-image-${widget.pet.id}',
+                      child: Image.network(
+                        widget.pet.imageUrls.first,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return GestureDetector(
+                            onTap: () => _openFullImage('assets/images/pet_image_placeholder.png'),
+                            child: Image.asset(
+                              'assets/images/pet_image_placeholder.png',
+                              fit: BoxFit.cover,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  )
+                : GestureDetector(
+                    onTap: () => _openFullImage('assets/images/pet_image_placeholder.png'),
+                    child: Hero(
+                      tag: 'pet-image-${widget.pet.id}',
+                      child: Image.asset(
                         'assets/images/pet_image_placeholder.png',
                         fit: BoxFit.cover,
-                      );
-                    },
-                  )
-                : Image.asset(
-                    'assets/images/pet_image_placeholder.png',
-                    fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
           ),
           

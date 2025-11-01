@@ -80,8 +80,10 @@ class _EditPetScreenState extends State<EditPetScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text('Ошибка выбора изображений: $e'),
             backgroundColor: Colors.red,
           ),
@@ -106,8 +108,10 @@ class _EditPetScreenState extends State<EditPetScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text('Ошибка при съемке: $e'),
             backgroundColor: Colors.red,
           ),
@@ -152,8 +156,10 @@ class _EditPetScreenState extends State<EditPetScreen> {
 
     final totalImages = _existingImageUrls.length + _newImages.length;
     if (totalImages == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
           content: Text('Добавьте хотя бы одну фотографию'),
           backgroundColor: Colors.red,
         ),
@@ -161,9 +167,12 @@ class _EditPetScreenState extends State<EditPetScreen> {
       return;
     }
 
+
     if (!_useMapLocation && _addressController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
           content: Text('Укажите место на карте или введите адрес'),
           backgroundColor: Colors.red,
         ),
@@ -190,22 +199,26 @@ class _EditPetScreenState extends State<EditPetScreen> {
 
     if (mounted) {
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text('Объявление обновлено'),
             backgroundColor: Colors.green,
           ),
         );
         Navigator.pop(context);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              petProvider.error ?? 'Ошибка обновления объявления',
+            ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
+              content: Text(
+                petProvider.error ?? 'Ошибка обновления объявления',
+              ),
+              backgroundColor: Colors.red,
             ),
-            backgroundColor: Colors.red,
-          ),
-        );
+          );
       }
     }
   }

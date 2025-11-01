@@ -58,6 +58,8 @@ class _AddPetScreenState extends State<AddPetScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text('Ошибка выбора изображений: $e'),
             backgroundColor: Colors.red,
           ),
@@ -84,6 +86,8 @@ class _AddPetScreenState extends State<AddPetScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text('Ошибка при съемке: $e'),
             backgroundColor: Colors.red,
           ),
@@ -123,6 +127,8 @@ class _AddPetScreenState extends State<AddPetScreen> {
     if (_images.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
           content: Text('Добавьте хотя бы одну фотографию'),
           backgroundColor: Colors.red,
         ),
@@ -133,6 +139,8 @@ class _AddPetScreenState extends State<AddPetScreen> {
     if (!_useMapLocation && _addressController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
           content: Text('Укажите место на карте или введите адрес'),
           backgroundColor: Colors.red,
         ),
@@ -175,8 +183,10 @@ class _AddPetScreenState extends State<AddPetScreen> {
         await petProvider.loadUserPets(authProvider.user!.uid);
         await petProvider.loadPets();
         
-        ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text('Объявление создано'),
             backgroundColor: Colors.green,
           ),
@@ -184,8 +194,10 @@ class _AddPetScreenState extends State<AddPetScreen> {
         
         Navigator.of(context).pop();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text(
               petProvider.error ?? 'Ошибка создания объявления',
             ),

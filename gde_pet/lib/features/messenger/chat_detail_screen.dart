@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/auth_provider.dart';
@@ -153,20 +155,78 @@ class ChatBubble extends StatelessWidget {
     required this.text,
   });
 
+  // Разбирает текст и возвращает список TextSpan, где URL-ы становятся кликабельными
+  List<TextSpan> _buildTextSpans(BuildContext context, String text) {
+    final List<TextSpan> spans = [];
+
+    final urlRegExp = RegExp(r'((https?:\/\/|www\.)[^\s]+)');
+    var start = 0;
+
+    for (final match in urlRegExp.allMatches(text)) {
+      if (match.start > start) {
+        spans.add(TextSpan(
+          text: text.substring(start, match.start),
+        ));
+      }
+
+      final url = match.group(0) ?? '';
+      final display = url;
+      String href = url;
+      if (!href.startsWith('http')) {
+        href = 'https://$href';
+      }
+
+      spans.add(TextSpan(
+        text: display,
+        style: TextStyle(
+          color: isSender ? Colors.white : const Color(0xFFEE8A9A),
+          decoration: TextDecoration.underline,
+        ),
+        recognizer: TapGestureRecognizer()
+          ..onTap = () async {
+            final uri = Uri.tryParse(href);
+            if (uri != null) {
+              try {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Не удалось открыть ссылку')),
+                );
+              }
+            }
+          },
+      ));
+
+      start = match.end;
+    }
+
+    if (start < text.length) {
+      spans.add(TextSpan(text: text.substring(start)));
+    }
+
+    return spans;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Align(
       alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4.0),
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+        margin: const EdgeInsets.symmetric(vertical: 6.0),
+        padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 12.0),
+        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
         decoration: BoxDecoration(
           color: isSender ? const Color(0xFFEE8A9A) : Colors.white,
           borderRadius: BorderRadius.circular(20.0),
         ),
-        child: Text(
-          text,
-          style: TextStyle(color: isSender ? Colors.white : Colors.black),
+        child: RichText(
+          text: TextSpan(
+            style: TextStyle(
+              color: isSender ? Colors.white : Colors.black,
+              fontSize: 15,
+            ),
+            children: _buildTextSpans(context, text),
+          ),
         ),
       ),
     );

@@ -321,15 +321,20 @@ class PetManagementScreen extends StatelessWidget {
   // Действия
   
   void _editPet(BuildContext context) {
-    Navigator.push(
+    _openEditPet(context);
+  }
+
+  Future<void> _openEditPet(BuildContext context) async {
+    final result = await Navigator.push<bool?>(
       context,
       MaterialPageRoute(
         builder: (context) => EditPetScreen(pet: pet),
       ),
-    ).then((_) {
-      // Обновляем данные после редактирования
-      Navigator.pop(context, true);
-    });
+    );
+
+    if (result == true) {
+      if (Navigator.canPop(context)) Navigator.pop(context, true);
+    }
   }
 
   Future<void> _toggleActive(BuildContext context) async {
@@ -365,6 +370,8 @@ class PetManagementScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text(
               success
                   ? 'Статус изменен'
@@ -416,6 +423,8 @@ class PetManagementScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text(
               success
                   ? 'Статус изменен'
@@ -469,6 +478,8 @@ class PetManagementScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text(
               success
                   ? '🎉 Поздравляем с находкой!'
@@ -519,6 +530,8 @@ class PetManagementScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text(
               success
                   ? 'Объявление удалено'

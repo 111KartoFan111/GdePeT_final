@@ -69,8 +69,10 @@ class _MapScreenState extends State<MapScreen> {
       });
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text('Не удалось определить местоположение'),
             backgroundColor: Colors.red,
           ),
