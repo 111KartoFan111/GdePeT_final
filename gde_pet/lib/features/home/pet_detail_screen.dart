@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/favorites_provider.dart';
 import '../../providers/pet_provider.dart';
+import '../../features/vet/vet_clinics_screen.dart';
 
 class PetDetailScreen extends StatefulWidget {
   final PetModel pet;
@@ -871,7 +872,28 @@ String _getMethodName(String method) {
                 ),
               ),
             ),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const VetClinicsScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.local_hospital),
+              label: const Text('Ближайшие ветклиники'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4CAF50), // Зеленый цвет для медицины
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+            ),
           ],
+
         )
       ],
     );

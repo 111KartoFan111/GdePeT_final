@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:gde_pet/features/home/pet_detail_screen.dart';
 import 'package:gde_pet/features/notifications/notifications_screen.dart';
+import 'package:gde_pet/features/pets/pet_list_screen.dart'; // <-- ИЗМЕНЕНИЕ: Добавляем импорт
+import 'package:gde_pet/features/vet/vet_clinics_screen.dart';
 import 'package:provider/provider.dart';
 import '../../providers/pet_provider.dart';
+// ... (остальные импорты)
 import '../../models/pet_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/profile_provider.dart';
@@ -69,11 +72,39 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               _buildAppBar(context),
               const SizedBox(height: 24),
-              _buildSectionHeader('Пропали'),
+
+              // --- ИЗМЕНЕНИЕ ---
+              _buildSectionHeader('Пропали', PetStatus.lost), // Передаем статус
               _buildHorizontalList(lostPets, PetStatus.lost),
               const SizedBox(height: 24),
-              _buildSectionHeader('Найдены'),
+              _buildSectionHeader('Найдены', PetStatus.found), // Передаем статус
               _buildHorizontalList(foundPets, PetStatus.found),
+              // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+
+              const SizedBox(height: 24),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const VetClinicsScreen(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.local_hospital),
+                  label: const Text('Ветеринарные клиники'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4CAF50),
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 56),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -132,16 +163,38 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(String title, PetStatus status) { // <-- ИЗМЕНЕНИЕ: Добавляем PetStatus status
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+      child: Row( // <-- ИЗМЕНЕНИЕ: Оборачиваем в Row
+        mainAxisAlignment: MainAxisAlignment.spaceBetween, // <-- ИЗМЕНЕНИЕ: Распределяем место
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          // --- НОВАЯ КНОПКА ---
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PetListScreen(status: status),
+                ),
+              );
+            },
+            child: const Text(
+              'Смотреть все',
+              style: TextStyle(color: Color(0xFFEE8A9A), fontWeight: FontWeight.w600),
+            ),
+          )
+          // --- КОНЕЦ НОВОЙ КНОПКИ ---
+        ],
       ),
     );
   }
 
+  // --- ВОЗВРАЩАЕМ _buildHorizontalList ---
   Widget _buildHorizontalList(List<PetModel> pets, PetStatus status) {
     if (pets.isEmpty) {
       return Padding(
@@ -183,6 +236,7 @@ class PetCard extends StatelessWidget {
   final Color color;
   final String title;
   final String location;
+  final VoidCallback? onTap;
 
   const PetCard({
     super.key,
@@ -190,6 +244,7 @@ class PetCard extends StatelessWidget {
     required this.color,
     required this.title,
     required this.location,
+    this.onTap,
   });
 
   @override
@@ -199,7 +254,7 @@ class PetCard extends StatelessWidget {
     final isFav = favoritesProvider.isFavorite(petModel.id);
     
     return GestureDetector(
-      onTap: () {
+      onTap: onTap ?? () {
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -231,7 +286,7 @@ class PetCard extends StatelessWidget {
                   // Фото питомца
                   Container(
                     decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+                      borderRadius: BorderRadius.circular(15), 
                       image: petModel.imageUrls.isNotEmpty
                           ? DecorationImage(
                               image: NetworkImage(petModel.imageUrls[0]),
@@ -242,7 +297,7 @@ class PetCard extends StatelessWidget {
                     child: petModel.imageUrls.isEmpty
                         ? Container(
                             decoration: BoxDecoration(
-                              borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+                              borderRadius: BorderRadius.circular(15),
                               color: color.withOpacity(0.3),
                             ),
                             child: const Center(
@@ -328,3 +383,4 @@ class PetCard extends StatelessWidget {
     );
   }
 }
+
