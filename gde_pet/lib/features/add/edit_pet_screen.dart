@@ -408,73 +408,173 @@ class _EditPetScreenState extends State<EditPetScreen> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _pickLocationOnMap,
-                      icon: const Icon(Icons.map),
-                      label: Text(
-                        _selectedLocation == null
-                            ? 'Выбрать на карте'
-                            : 'Местоположение выбрано',
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: _useMapLocation
-                            ? const Color(0xFFEE8A9A)
-                            : Colors.black,
-                        side: BorderSide(
-                          color: _useMapLocation
-                              ? const Color(0xFFEE8A9A)
-                              : Colors.grey,
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          _useMapLocation = false;
-                          _selectedLocation = null;
-                        });
-                      },
-                      icon: const Icon(Icons.edit_location),
-                      label: const Text('Ввести адрес'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: !_useMapLocation
-                            ? const Color(0xFFEE8A9A)
-                            : Colors.black,
-                        side: BorderSide(
-                          color: !_useMapLocation
-                              ? const Color(0xFFEE8A9A)
-                              : Colors.grey,
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              if (!_useMapLocation) ...[
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _addressController,
-                  decoration: const InputDecoration(
-                    hintText: 'Астана, район Есиль',
-                  ),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(color: Colors.grey.shade200),
                 ),
-              ],
-
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: _pickLocationOnMap,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              decoration: BoxDecoration(
+                                color: _useMapLocation 
+                                    ? const Color(0xFFEE8A9A).withOpacity(0.1)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: _useMapLocation
+                                      ? const Color(0xFFEE8A9A)
+                                      : Colors.grey.shade300,
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.map_outlined,
+                                    size: 32,
+                                    color: _useMapLocation
+                                        ? const Color(0xFFEE8A9A)
+                                        : Colors.grey,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'На карте',
+                                    style: TextStyle(
+                                      color: _useMapLocation
+                                          ? const Color(0xFFEE8A9A)
+                                          : Colors.black,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              setState(() {
+                                _useMapLocation = false;
+                                _selectedLocation = null;
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              decoration: BoxDecoration(
+                                color: !_useMapLocation 
+                                    ? const Color(0xFFEE8A9A).withOpacity(0.1)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: !_useMapLocation
+                                      ? const Color(0xFFEE8A9A)
+                                      : Colors.grey.shade300,
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.edit_location_outlined,
+                                    size: 32,
+                                    color: !_useMapLocation
+                                        ? const Color(0xFFEE8A9A)
+                                        : Colors.grey,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Ввести адрес',
+                                    style: TextStyle(
+                                      color: !_useMapLocation
+                                          ? const Color(0xFFEE8A9A)
+                                          : Colors.black,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (!_useMapLocation) ...[
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _addressController,
+                        decoration: InputDecoration(
+                          hintText: 'Астана, район Есиль',
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: BorderSide.none,
+                          ),
+                          prefixIcon: const Icon(Icons.location_on_outlined),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Введите адрес';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                    if (_selectedLocation != null && _useMapLocation) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.location_on,
+                                  size: 20,
+                                  color: Color(0xFFEE8A9A),
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Выбранное местоположение',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Широта: ${_selectedLocation!.latitude.toStringAsFixed(6)}',
+                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                            Text(
+                              'Долгота: ${_selectedLocation!.longitude.toStringAsFixed(6)}',
+                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              
               const SizedBox(height: 24),
 
               const Text(

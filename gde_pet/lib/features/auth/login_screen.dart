@@ -229,51 +229,94 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _showResetPasswordDialog() {
-    final emailController = TextEditingController();
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Восстановление пароля'),
-        content: TextField(
-          controller: emailController,
-          decoration: const InputDecoration(
-            hintText: 'Введите ваш email',
+void _showResetPasswordDialog() {
+  final emailController = TextEditingController();
+  
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Восстановление пароля'),
+      contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Введите email, на который зарегистрирован аккаунт',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: emailController,
+                decoration: const InputDecoration(
+                  hintText: 'example@email.com',
+                  prefixIcon: Icon(Icons.email_outlined),
+                ),
+                keyboardType: TextInputType.emailAddress,
+                maxLines: 1,
+              ),
+            ],
           ),
-          keyboardType: TextInputType.emailAddress,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Отмена'),
-          ),
-          TextButton(
-            onPressed: () async {
-              final email = emailController.text.trim();
-              if (email.isNotEmpty) {
-                final success = await context.read<AuthProvider>()
-                    .resetPassword(email);
-                
-                if (mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        success
-                            ? 'Письмо отправлено на $email'
-                            : 'Ошибка отправки письма',
-                      ),
-                      backgroundColor: success ? Colors.green : Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            child: const Text('Отправить'),
-          ),
-        ],
       ),
-    );
-  }
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Отмена'),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            final email = emailController.text.trim();
+            if (email.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Введите email'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+              return;
+            }
+            
+            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Введите корректный email'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+              return;
+            }
+            
+            final success = await context.read<AuthProvider>()
+                .resetPassword(email);
+            
+            if (mounted) {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    success
+                        ? 'Письмо для восстановления отправлено на $email'
+                        : 'Ошибка отправки письма. Проверьте email',
+                  ),
+                  backgroundColor: success ? Colors.green : Colors.red,
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFEE8A9A),
+          ),
+          child: const Text('Отправить'),
+        ),
+      ],
+    ),
+  );
+}
 }

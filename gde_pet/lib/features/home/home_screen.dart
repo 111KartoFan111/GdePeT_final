@@ -208,56 +208,117 @@ class PetCard extends StatelessWidget {
       child: Container(
         width: 180,
         margin: const EdgeInsets.symmetric(horizontal: 8),
-        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
+            // Изображение
+            Expanded(
+              flex: 3,
+              child: Stack(
+                children: [
+                  // Фото питомца
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+                      image: petModel.imageUrls.isNotEmpty
+                          ? DecorationImage(
+                              image: NetworkImage(petModel.imageUrls[0]),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
                     ),
-                    overflow: TextOverflow.ellipsis,
+                    child: petModel.imageUrls.isEmpty
+                        ? Container(
+                            decoration: BoxDecoration(
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+                              color: color.withOpacity(0.3),
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.pets,
+                                size: 40,
+                                color: Colors.white,
+                              ),
+                            ),
+                          )
+                        : null,
                   ),
-                ),
-                GestureDetector(
-                  onTap: () async {
-                    if (authProvider.user == null) return;
-                    await favoritesProvider.toggleFavorite(
-                      authProvider.user!.uid, 
-                      petModel.id,
-                    );
-                  },
-                  child: Icon(
-                    isFav ? Icons.favorite : Icons.favorite_border,
-                    color: isFav ? Colors.redAccent : Colors.black,
+                  // Статус питомца
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            petModel.status == PetStatus.lost ? Icons.search : Icons.pets,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            petModel.status == PetStatus.lost ? "Пропал" : "Найден",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const Spacer(),
-            Row(
-              children: [
-                const Icon(Icons.location_on, size: 16, color: Colors.black),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    location,
-                    style: const TextStyle(color: Colors.black),
-                    overflow: TextOverflow.ellipsis,
+                  // Кнопка избранного
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: GestureDetector(
+                      onTap: () async {
+                        if (authProvider.user == null) return;
+                        await favoritesProvider.toggleFavorite(
+                          authProvider.user!.uid, 
+                          petModel.id,
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          isFav ? Icons.favorite : Icons.favorite_border,
+                          color: isFav ? Colors.redAccent : Colors.grey,
+                          size: 20,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),

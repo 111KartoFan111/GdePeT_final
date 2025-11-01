@@ -27,13 +27,13 @@ class AuthService {
         password: password,
       );
 
-      // Обновляем профиль
+      // Обновляем профиль Firebase Auth
       await credential.user?.updateDisplayName(displayName);
 
       // Отправляем письмо для верификации
       await credential.user?.sendEmailVerification();
 
-      // Сохраняем данные в Firestore
+      // ВАЖНО: Сохраняем данные в Firestore СРАЗУ после регистрации
       await _saveUserToFirestore(
         credential.user!,
         phoneNumber: phoneNumber,
@@ -93,16 +93,19 @@ class AuthService {
     required Function(String error) verificationFailed,
     required Function(PhoneAuthCredential credential) verificationCompleted,
   }) async {
-    await _auth.verifyPhoneNumber(
-      phoneNumber: phoneNumber,
-      verificationCompleted: verificationCompleted,
-      verificationFailed: (FirebaseAuthException e) {
-        verificationFailed(_handleAuthException(e));
-      },
-      codeSent: codeSent,
-      timeout: const Duration(seconds: 60),
-      codeAutoRetrievalTimeout: (String verificationId) {},
-    );
+    try {
+      await _auth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: verificationCompleted,
+        verificationFailed: (FirebaseAuthException e) {
+          verificationFailed(_handleAuthException(e));
+        },
+        codeSent: codeSent,
+        codeAutoRetrievalTimeout: (String verificationId) {},
+      );
+    } catch (e) {
+      throw 'Ошибка отправки SMS: $e';
+    }
   }
 
   // Подтверждение кода из SMS
@@ -117,32 +120,17 @@ class AuthService {
       );
 
       final userCredential = await _auth.signInWithCredential(credential);
-
+      
       // Сохраняем данные в Firestore
       await _saveUserToFirestore(userCredential.user!);
-
+      
       return userCredential;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     }
   }
 
-  // Отправить письмо для верификации email
-  Future<void> sendEmailVerification() async {
-    try {
-      await currentUser?.sendEmailVerification();
-    } catch (e) {
-      throw 'Ошибка отправки письма: $e';
-    }
-  }
-
-  // Проверить, верифицирован ли email
-  Future<bool> isEmailVerified() async {
-    await currentUser?.reload();
-    return currentUser?.emailVerified ?? false;
-  }
-
-  // Сброс пароля
+  // Восстановление пароля
   Future<void> resetPassword(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
@@ -157,38 +145,54 @@ class AuthService {
     await _auth.signOut();
   }
 
-  // Сохранение данных пользователя в Firestore
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ: Сохранение данных пользователя в Firestore
   Future<void> _saveUserToFirestore(
     User user, {
     String? phoneNumber,
   }) async {
-    // Разделяем displayName на имя и фамилию
-    String? firstName;
-    String? lastName;
-    
-    if (user.displayName != null) {
-      final nameParts = user.displayName!.split(' ');
-      firstName = nameParts.isNotEmpty ? nameParts[0] : null;
-      lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : null;
+    try {
+      // Проверяем, существует ли уже документ пользователя
+      final userDoc = await _firestore.collection('users').doc(user.uid).get();
+      
+      // Разделяем displayName на имя и фамилию
+      String? firstName;
+      String? lastName;
+      
+      if (user.displayName != null && user.displayName!.isNotEmpty) {
+        final nameParts = user.displayName!.split(' ');
+        firstName = nameParts.isNotEmpty ? nameParts[0] : null;
+        lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : null;
+      }
+
+      final userData = {
+        'uid': user.uid,
+        'email': user.email,
+        'phoneNumber': phoneNumber ?? user.phoneNumber,
+        'displayName': user.displayName ?? '', // ВАЖНО: сохраняем полное имя
+        'firstName': firstName,
+        'lastName': lastName,
+        'photoURL': user.photoURL,
+        'isEmailVerified': user.emailVerified,
+        'postsCount': 0,
+        'foundPetsCount': 0,
+      };
+
+      // Если документ не существует, добавляем createdAt
+      if (!userDoc.exists) {
+        userData['createdAt'] = FieldValue.serverTimestamp();
+      }
+      
+      // Используем merge: true для обновления только новых полей
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .set(userData, SetOptions(merge: true));
+          
+      print('User data saved to Firestore successfully: ${user.uid}');
+    } catch (e) {
+      print('Error saving user to Firestore: $e');
+      // Не прерываем выполнение, чтобы не блокировать регистрацию
     }
-
-    final userData = {
-      'uid': user.uid,
-      'email': user.email,
-      'phoneNumber': phoneNumber ?? user.phoneNumber,
-      'firstName': firstName,
-      'lastName': lastName,
-      'photoURL': user.photoURL,
-      'isEmailVerified': user.emailVerified,
-      'createdAt': DateTime.now().toIso8601String(),
-      'postsCount': 0,
-      'foundPetsCount': 0,
-    };
-
-    await _firestore
-        .collection('users')
-        .doc(user.uid)
-        .set(userData, SetOptions(merge: true));
   }
 
   // Получить данные пользователя из Firestore
@@ -200,6 +204,7 @@ class AuthService {
       }
       return null;
     } catch (e) {
+      print('Error getting user data: $e');
       return null;
     }
   }
@@ -214,7 +219,7 @@ class AuthService {
       case 'operation-not-allowed':
         return 'Операция не разрешена';
       case 'weak-password':
-        return 'Слишком простой пароль';
+        return 'Слишком простой пароль (минимум 6 символов)';
       case 'user-disabled':
         return 'Пользователь отключен';
       case 'user-not-found':
@@ -225,8 +230,10 @@ class AuthService {
         return 'Неверный код подтверждения';
       case 'invalid-verification-id':
         return 'Неверный ID верификации';
+      case 'too-many-requests':
+        return 'Слишком много попыток. Попробуйте позже';
       default:
-        return 'Произошла ошибка: ${e.message}';
+        return 'Произошла ошибка: ${e.message ?? e.code}';
     }
   }
 }
