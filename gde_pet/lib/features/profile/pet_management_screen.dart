@@ -107,8 +107,7 @@ class PetManagementScreen extends StatelessWidget {
             ),
             
             const SizedBox(height: 24),
-            
-            // Статистика объявления
+
             _buildStatsSection(pet),
           ],
         ),
