@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:gde_pet/features/home/pet_detail_screen.dart';
 import 'package:gde_pet/features/notifications/notifications_screen.dart';
-import 'package:gde_pet/features/pets/pet_list_screen.dart'; // <-- ИЗМЕНЕНИЕ: Добавляем импорт
+import 'package:gde_pet/features/pets/pet_list_screen.dart'; 
 import 'package:gde_pet/features/vet/vet_clinics_screen.dart';
 import 'package:provider/provider.dart';
 import '../../providers/pet_provider.dart';
-// ... (остальные импорты)
 import '../../models/pet_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/profile_provider.dart';
@@ -30,15 +29,16 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadInitialData() async {
     final petProvider = context.read<PetProvider>();
     final authProvider = context.read<AuthProvider>();
-    final profileProvider = context.read<ProfileProvider>();
+    // final profileProvider = context.read<ProfileProvider>(); // <-- УДАЛЕНО
     final favoritesProvider = context.read<FavoritesProvider>();
     
     // Загружаем ВСЕ активные объявления
     await petProvider.loadPets();
     
-    if (authProvider.user != null && profileProvider.profile == null) {
-      await profileProvider.loadProfile(authProvider.user!.uid);
-    }
+    // Профиль теперь загружается в AuthWrapper
+    // if (authProvider.user != null && profileProvider.profile == null) { // <-- УДАЛЕНО
+    //   await profileProvider.loadProfile(authProvider.user!.uid);
+    // }
 
     if (authProvider.user != null) {
       await favoritesProvider.loadFavorites(authProvider.user!.uid);
@@ -73,13 +73,11 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildAppBar(context),
               const SizedBox(height: 24),
 
-              // --- ИЗМЕНЕНИЕ ---
-              _buildSectionHeader('Пропали', PetStatus.lost), // Передаем статус
+              _buildSectionHeader('Пропали', PetStatus.lost), 
               _buildHorizontalList(lostPets, PetStatus.lost),
               const SizedBox(height: 24),
-              _buildSectionHeader('Найдены', PetStatus.found), // Передаем статус
+              _buildSectionHeader('Найдены', PetStatus.found), 
               _buildHorizontalList(foundPets, PetStatus.found),
-              // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
               const SizedBox(height: 24),
               Container(
@@ -94,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                   icon: const Icon(Icons.local_hospital),
-                  label: const Text('Ветеринарные клиники'),
+                  label: const Text('🏥 Ветеринарные клиники'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4CAF50),
                     foregroundColor: Colors.white,
@@ -113,15 +111,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildAppBar(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
+    // final authProvider = context.watch<AuthProvider>(); // <-- authProvider не нужен
     final profileProvider = context.watch<ProfileProvider>();
     
-  final displayName = profileProvider.profile?.displayName ??
-    authProvider.userModel?.displayName ??
-    'Пользователь';
-  final firstName = displayName.trim().isEmpty
-    ? 'Пользователь'
-    : displayName.trim().split(RegExp(r'\s+'))[0];
+    // ИСПРАВЛЕНИЕ: Логика имени пользователя
+    // Теперь profileProvider гарантированно загружен (или null для гостя)
+    final displayName = profileProvider.profile?.displayName ?? 'Пользователь';
+    
+    final firstName = displayName.trim().isEmpty
+        ? 'Пользователь'
+        : displayName.trim().split(RegExp(r'\s+'))[0];
     
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -163,17 +162,16 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title, PetStatus status) { // <-- ИЗМЕНЕНИЕ: Добавляем PetStatus status
+  Widget _buildSectionHeader(String title, PetStatus status) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      child: Row( // <-- ИЗМЕНЕНИЕ: Оборачиваем в Row
-        mainAxisAlignment: MainAxisAlignment.spaceBetween, // <-- ИЗМЕНЕНИЕ: Распределяем место
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             title,
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
-          // --- НОВАЯ КНОПКА ---
           TextButton(
             onPressed: () {
               Navigator.push(
@@ -188,13 +186,11 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(color: Color(0xFFEE8A9A), fontWeight: FontWeight.w600),
             ),
           )
-          // --- КОНЕЦ НОВОЙ КНОПКИ ---
         ],
       ),
     );
   }
 
-  // --- ВОЗВРАЩАЕМ _buildHorizontalList ---
   Widget _buildHorizontalList(List<PetModel> pets, PetStatus status) {
     if (pets.isEmpty) {
       return Padding(
@@ -383,4 +379,3 @@ class PetCard extends StatelessWidget {
     );
   }
 }
-

@@ -37,6 +37,8 @@ dependencies:
   url_launcher: ^6.2.5
   geolocator: ^11.0.0
   timeago: ^3.6.1
+  http: ^1.5.0 # <-- ДОБАВЛЕНО
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -23,21 +23,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _loadProfile();
+    // ИЗМЕНЕНИЕ: Убираем _loadProfile(),
+    // так как AuthWrapper теперь загружает профиль заранее.
+    // Оставляем только загрузку постов юзера.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadUserPetsCount();
+    });
   }
 
-  Future<void> _loadProfile() async {
+  // ИЗМЕНЕНИЕ: _loadProfile переименован и упрощен
+  Future<void> _loadUserPetsCount() async {
     final authProvider = context.read<AuthProvider>();
-    final profileProvider = context.read<ProfileProvider>();
     final petProvider = context.read<PetProvider>();
     
     if (authProvider.user != null) {
-      await profileProvider.loadProfile(authProvider.user!.uid);
+      // profileProvider уже должен быть загружен
       await petProvider.loadUserPets(authProvider.user!.uid);
       
-      setState(() {
-        _postsCount = petProvider.userPets.length;
-      });
+      if (mounted) {
+        setState(() {
+          _postsCount = petProvider.userPets.length;
+        });
+      }
     }
   }
 
@@ -92,18 +99,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return _buildGuestView();
     }
 
-    if (profileProvider.isLoading && profileProvider.profile == null) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(color: Color(0xFFEE8A9A)),
-        ),
-      );
-    }
+    // ИЗМЕНЕНИЕ: Убрана проверка isLoading,
+    // так как AuthWrapper ждет загрузки
+    // if (profileProvider.isLoading && profileProvider.profile == null) {
+    //   return const Scaffold(
+    //     body: Center(
+    //       child: CircularProgressIndicator(color: Color(0xFFEE8A9A)),
+    //     ),
+    //   );
+    // }
 
     final profile = profileProvider.profile;
-    final displayName = profile?.displayName ?? 
-        authProvider.user?.displayName ?? 
-        'Пользователь';
+
+    // ИСПРАВЛЕНИЕ: Убираем fallback на authProvider.user.displayName
+    final displayName = profile?.displayName ?? 'Пользователь';
+        
     final initials = profile?.initials ?? 
         (displayName.isNotEmpty ? displayName[0].toUpperCase() : 'П');
 
@@ -135,7 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: _loadProfile,
+        onRefresh: _loadUserPetsCount, // <-- ИЗМЕНЕНИЕ
         color: const Color(0xFFEE8A9A),
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -232,7 +242,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     MaterialPageRoute(
                       builder: (context) => const EditProfileScreen(),
                     ),
-                  ).then((_) => _loadProfile());
+                  ).then((_) {
+                    // ИЗМЕНЕНИЕ: Не нужно перезагружать,
+                    // т.к. профиль обновится по подписке
+                    // _loadUserPetsCount(); 
+                  });
                 },
               ),
               
@@ -259,7 +273,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     MaterialPageRoute(
                       builder: (context) => const UserPetsScreen(),
                     ),
-                  ).then((_) => _loadProfile());
+                  ).then((_) => _loadUserPetsCount()); // <-- ИЗМЕНЕНИЕ
                 },
               ),
               

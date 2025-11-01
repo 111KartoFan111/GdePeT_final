@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
-import '../models/user_model.dart';
+// import '../models/user_model.dart'; // <-- УДАЛЕНО
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
   
   User? _user;
-  UserModel? _userModel;
+  // UserModel? _userModel; // <-- УДАЛЕНО
   bool _isLoading = false;
   String? _error;
   bool _isGuest = false;
 
   User? get user => _user;
-  UserModel? get userModel => _userModel;
+  // UserModel? get userModel => _userModel; // <-- УДАЛЕНО
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isAuthenticated => _user != null;
@@ -22,22 +22,19 @@ class AuthProvider extends ChangeNotifier {
   AuthProvider() {
     _authService.authStateChanges.listen((User? user) {
       _user = user;
-      if (user != null) {
-        _loadUserData();
-      } else {
-        _userModel = null;
-      }
+      // Логика _loadUserData() удалена,
+      // она будет в AuthWrapper в main.dart
+      // if (user != null) { 
+      //   _loadUserData();
+      // } else {
+      //   _userModel = null;
+      // }
       notifyListeners();
     });
   }
 
   // Загрузка данных пользователя из Firestore
-  Future<void> _loadUserData() async {
-    if (_user != null) {
-      _userModel = await _authService.getUserData(_user!.uid);
-      notifyListeners();
-    }
-  }
+  // Future<void> _loadUserData() async { ... } // <-- УДАЛЕНО
 
   // Регистрация через email
   Future<bool> signUpWithEmail({
@@ -177,9 +174,10 @@ class AuthProvider extends ChangeNotifier {
   // Проверить верификацию email
   Future<bool> checkEmailVerification() async {
     final isVerified = await _authService.isEmailVerified();
-    if (isVerified) {
-      await _loadUserData();
-    }
+    // Логика _loadUserData() удалена
+    // if (isVerified) {
+    //   await _loadUserData();
+    // }
     return isVerified;
   }
 

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:gde_pet/services/gemini_service.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
@@ -30,7 +31,23 @@ class _AddPetScreenState extends State<AddPetScreen> {
   PetStatus _selectedStatus = PetStatus.lost;
   LatLng? _selectedLocation;
   bool _useMapLocation = false;
+  bool _isAiLoading = false; // <-- ДОБАВЛЕНО: Состояние загрузки AI
 
+  // --- ДОБАВЛЕНО: initState для загрузки контактов ---
+  @override
+  void initState() {
+    super.initState();
+    // Загружаем контакты из профиля
+    // Используем addPostFrameCallback, чтобы context был доступен
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final profile = context.read<ProfileProvider>().profile;
+      if (profile != null) {
+        _phoneController.text = profile.phoneNumber ?? '';
+        _telegramController.text = profile.telegramTag ?? '';
+      }
+    });
+  }
+  
   @override
   void dispose() {
     _petNameController.dispose();
@@ -121,6 +138,41 @@ class _AddPetScreenState extends State<AddPetScreen> {
     }
   }
 
+  // --- ДОБАВЛЕНО: Функция генерации AI ---
+  Future<void> _generateAiDescription() async {
+    setState(() {
+      _isAiLoading = true;
+    });
+
+    try {
+      final description = await GeminiService.generateDescription(
+        status: _selectedStatus,
+        type: _selectedType,
+        petName: _petNameController.text.trim(),
+      );
+      
+      setState(() {
+        _descriptionController.text = description;
+        _isAiLoading = false;
+      });
+
+    } catch (e) {
+      setState(() {
+        _isAiLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
+            content: Text('Ошибка AI: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _createPet() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -155,9 +207,8 @@ class _AddPetScreenState extends State<AddPetScreen> {
     if (authProvider.user == null) return;
 
     final profile = profileProvider.profile;
-    final ownerName = profile?.displayName ?? 
-        authProvider.user?.displayName ?? 
-        'Пользователь';
+    // ИСПРАВЛЕНИЕ: Используем profile.displayName
+    final ownerName = profile?.displayName ?? 'Пользователь';
 
     final success = await petProvider.createPet(
       userId: authProvider.user!.uid,
@@ -373,9 +424,36 @@ class _AddPetScreenState extends State<AddPetScreen> {
 
               const SizedBox(height: 24),
 
-              const Text(
-                'Особые приметы',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              // ИЗМЕНЕНИЕ: Добавлена кнопка AI
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Особые приметы',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  TextButton.icon(
+                    onPressed: _isAiLoading ? null : _generateAiDescription,
+                    icon: Icon(
+                      Icons.auto_awesome,
+                      size: 18,
+                      color: _isAiLoading ? Colors.grey : const Color(0xFFEE8A9A),
+                    ),
+                    label: Text(
+                      _isAiLoading ? 'Генерация...' : 'Помощь AI',
+                      style: TextStyle(
+                        color: _isAiLoading ? Colors.grey : const Color(0xFFEE8A9A),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)
+                      )
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
               TextFormField(
@@ -577,13 +655,19 @@ class _AddPetScreenState extends State<AddPetScreen> {
               TextFormField(
                 controller: _phoneController,
                 decoration: const InputDecoration(
-                  hintText: 'Номер телефона',
+                  hintText: 'Номер телефона (из профиля)',
                   prefixIcon: Icon(Icons.phone),
                 ),
                 keyboardType: TextInputType.phone,
                 validator: (value) {
+                  // ИЗМЕНЕНИЕ: Проверяем, что хотя бы одно поле заполнено
+                  final profile = context.read<ProfileProvider>().profile;
+                  final hasProfilePhone = profile?.phoneNumber?.isNotEmpty ?? false;
+                  final hasProfileTelegram = profile?.telegramTag?.isNotEmpty ?? false;
+
                   if ((value == null || value.trim().isEmpty) &&
-                      (_telegramController.text.trim().isEmpty)) {
+                      (_telegramController.text.trim().isEmpty) &&
+                      !hasProfilePhone && !hasProfileTelegram) {
                     return 'Укажите номер телефона или Telegram';
                   }
                   return null;
@@ -595,12 +679,18 @@ class _AddPetScreenState extends State<AddPetScreen> {
               TextFormField(
                 controller: _telegramController,
                 decoration: const InputDecoration(
-                  hintText: 'Telegram',
+                  hintText: 'Telegram (из профиля)',
                   prefixIcon: Icon(Icons.telegram),
                 ),
                 validator: (value) {
+                  // ИЗМЕНЕНИЕ: Проверяем, что хотя бы одно поле заполнено
+                  final profile = context.read<ProfileProvider>().profile;
+                  final hasProfilePhone = profile?.phoneNumber?.isNotEmpty ?? false;
+                  final hasProfileTelegram = profile?.telegramTag?.isNotEmpty ?? false;
+
                   if ((value == null || value.trim().isEmpty) &&
-                      (_phoneController.text.trim().isEmpty)) {
+                      (_phoneController.text.trim().isEmpty) &&
+                      !hasProfilePhone && !hasProfileTelegram) {
                     return 'Укажите номер телефона или Telegram';
                   }
                   return null;

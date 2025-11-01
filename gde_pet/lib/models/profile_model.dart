@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class ProfileModel {
   final String uid;
   final String? email;
@@ -32,15 +34,23 @@ class ProfileModel {
   });
 
   String get displayName {
-    if (firstName != null && lastName != null) {
-      return '$firstName $lastName';
+    // ИСПРАВЛЕНИЕ: Улучшенная логика для displayName
+    final fName = (firstName?.trim().isNotEmpty == true) ? firstName!.trim() : null;
+    final lName = (lastName?.trim().isNotEmpty == true) ? lastName!.trim() : null;
+
+    if (fName != null && lName != null) {
+      return '$fName $lName';
     }
-    return firstName ?? lastName ?? 'Пользователь';
+    return fName ?? lName ?? 'Пользователь';
   }
 
   String get initials {
     String first = firstName?.isNotEmpty == true ? firstName![0] : '';
     String last = lastName?.isNotEmpty == true ? lastName![0] : '';
+    
+    if (first.isEmpty && last.isEmpty) {
+      return 'П'; // "Пользователь"
+    }
     return (first + last).toUpperCase();
   }
 
@@ -56,9 +66,16 @@ class ProfileModel {
       bio: json['bio'],
       city: json['city'],
       isEmailVerified: json['isEmailVerified'] ?? false,
-      createdAt: DateTime.parse(json['createdAt']),
+      // ИСПРАВЛЕНИЕ: Обрабатываем Timestamp ИЛИ String
+      createdAt: json['createdAt'] is Timestamp
+          ? (json['createdAt'] as Timestamp).toDate()
+          : (json['createdAt'] != null
+              ? DateTime.parse(json['createdAt'])
+              : DateTime.now()), // Запасной вариант
       updatedAt: json['updatedAt'] != null 
-          ? DateTime.parse(json['updatedAt']) 
+          ? (json['updatedAt'] is Timestamp
+              ? (json['updatedAt'] as Timestamp).toDate()
+              : DateTime.parse(json['updatedAt']))
           : null,
       postsCount: json['postsCount'] ?? 0,
       foundPetsCount: json['foundPetsCount'] ?? 0,

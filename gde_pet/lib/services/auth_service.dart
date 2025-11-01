@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/user_model.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -194,7 +193,8 @@ class AuthService {
 
       // Если документ не существует, добавляем createdAt
       if (!userDoc.exists) {
-        userData['createdAt'] = FieldValue.serverTimestamp();
+        // ИСПРАВЛЕНИЕ: Используем ISO-строку вместо FieldValue.serverTimestamp()
+        userData['createdAt'] = DateTime.now().toIso8601String();
       }
       
       // Используем merge: true для обновления только новых полей
@@ -206,25 +206,9 @@ class AuthService {
       print('User data saved to Firestore successfully: ${user.uid}');
     } catch (e) {
       print('Error saving user to Firestore: $e');
-      // Не прерываем выполнение, чтобы не блокировать регистрацию
     }
   }
 
-  // Получить данные пользователя из Firestore
-  Future<UserModel?> getUserData(String uid) async {
-    try {
-      final doc = await _firestore.collection('users').doc(uid).get();
-      if (doc.exists) {
-        return UserModel.fromJson(doc.data()!);
-      }
-      return null;
-    } catch (e) {
-      print('Error getting user data: $e');
-      return null;
-    }
-  }
-
-  // Обработка ошибок Firebase Auth
   String _handleAuthException(FirebaseAuthException e) {
     switch (e.code) {
       case 'email-already-in-use':

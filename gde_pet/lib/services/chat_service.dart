@@ -56,9 +56,21 @@ class ChatService {
       if (!currentUserDoc.exists || !receiverUserDoc.exists) {
         throw Exception("User profile not found");
       }
+      
+      // ИСПРАВЛЕНИЕ: Безопасное получение данных и проверка createdAt
+      final currentUserData = currentUserDoc.data() as Map<String, dynamic>;
+      final receiverUserData = receiverUserDoc.data() as Map<String, dynamic>;
 
-      ProfileModel currentUserProfile = ProfileModel.fromJson(currentUserDoc.data() as Map<String, dynamic>);
-      ProfileModel receiverUserProfile = ProfileModel.fromJson(receiverUserDoc.data() as Map<String, dynamic>);
+      // Добавляем проверку на createdAt, если он null 
+      if (currentUserData['createdAt'] == null) {
+        currentUserData['createdAt'] = DateTime.now().toIso8601String();
+      }
+      if (receiverUserData['createdAt'] == null) {
+        receiverUserData['createdAt'] = DateTime.now().toIso8601String();
+      }
+
+      ProfileModel currentUserProfile = ProfileModel.fromJson(currentUserData);
+      ProfileModel receiverUserProfile = ProfileModel.fromJson(receiverUserData);
 
       await _firestore.collection('chats').doc(chatId).set({
         'users': [currentUserId, receiverId],
