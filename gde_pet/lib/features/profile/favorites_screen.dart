@@ -35,7 +35,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     await favoritesProvider.loadFavorites(authProvider.user!.uid);
     await petProvider.loadPets();
 
-    // Фильтруем питомцев по избранным ID
     _favoritePets = petProvider.pets
         .where((pet) => favoritesProvider.isFavorite(pet.id))
         .toList();
@@ -97,7 +96,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       crossAxisCount: 2,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
-                      childAspectRatio: 0.85,
+                      mainAxisExtent: 280,
                     ),
                     itemCount: _favoritePets.length,
                     itemBuilder: (context, index) {

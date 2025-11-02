@@ -67,18 +67,17 @@ class _UserPetsScreenState extends State<UserPetsScreen> {
                       style: TextStyle(color: Colors.grey, fontSize: 16),
                     ),
                   )
-                : GridView.builder(
+                  : GridView.builder(
                     padding: const EdgeInsets.all(16.0),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
-                      childAspectRatio: 0.85,
+                      mainAxisExtent: 280,
                     ),
                     itemCount: pets.length,
                     itemBuilder: (context, index) {
                       final pet = pets[index];
-                      // Создаем свою карточку вместо использования PetCard
                       return _buildUserPetCard(pet);
                     },
                   ),
@@ -90,12 +89,12 @@ class _UserPetsScreenState extends State<UserPetsScreen> {
     final color = pet.status == PetStatus.lost
         ? const Color(0xFFEE8A9A)
         : const Color(0xFFD6C9FF);
-      return PetCard( // <-- ИЗМЕНЕНИЕ: Убран GestureDetector
+      return PetCard( 
         petModel: pet,
         color: color,
         title: pet.petName,
         location: pet.address ?? 'На карте',
-        onTap: () async { // <-- ИЗМЕНЕНИЕ: Логика передана напрямую в PetCard
+        onTap: () async {
           final result = await Navigator.push<bool?>(
             context,
             MaterialPageRoute(
@@ -103,7 +102,7 @@ class _UserPetsScreenState extends State<UserPetsScreen> {
             ),
           );
           if (result == true) {
-            _loadUserPets(); // Обновляем список после изменений
+            _loadUserPets();
           }
         },
       );

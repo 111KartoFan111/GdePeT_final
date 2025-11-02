@@ -35,13 +35,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final petProvider = context.watch<PetProvider>();
     final userPets = petProvider.userPets;
 
-    // Статистика
     final totalPets = userPets.length;
     final lostPets = userPets.where((p) => p.status == PetStatus.lost).length;
     final foundPets = userPets.where((p) => p.status == PetStatus.found).length;
     final activePets = userPets.where((p) => p.isActive).length;
     
-    // Статистика по типам
     final dogCount = userPets.where((p) => p.type == PetType.dog).length;
     final catCount = userPets.where((p) => p.type == PetType.cat).length;
     final birdCount = userPets.where((p) => p.type == PetType.bird).length;
@@ -74,7 +72,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Общая статистика
               _buildStatsGrid(
                 totalPets: totalPets,
                 lostPets: lostPets,
@@ -84,7 +81,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
               const SizedBox(height: 24),
 
-              // Заголовок графика
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
