@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
-import 'email_verification_screen.dart';
+import '../../features/main_nav_shell.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -11,12 +11,12 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _surnameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
@@ -32,31 +32,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final authProvider = context.read<AuthProvider>();
-    final displayName = '${_nameController.text} ${_surnameController.text}';
 
+    // ИСПРАВЛЕНИЕ: Передаем firstName и lastName отдельно
     final success = await authProvider.signUpWithEmail(
       email: _emailController.text.trim(),
       password: _passwordController.text,
-      displayName: displayName,
-      phoneNumber: _phoneController.text.trim(),
+      firstName: _nameController.text.trim(),
+      lastName: _surnameController.text.trim(),
+      phoneNumber: _phoneController.text.trim().isEmpty 
+          ? null 
+          : _phoneController.text.trim(),
     );
 
-    if (success && mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const EmailVerificationScreen(),
-        ),
-      );
-    } else if (authProvider.error != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.error!),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
-        ),
-      );
+    if (mounted) {
+      if (success) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const MainNavShell()),
+          (route) => false,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Регистрация успешна! Проверьте email для подтверждения.'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.error ?? 'Ошибка регистрации'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
+          ),
+        );
+      }
     }
   }
 
@@ -102,7 +114,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _nameController,
                   decoration: const InputDecoration(hintText: 'Имя'),
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    if (value == null || value.trim().isEmpty) {
                       return 'Введите имя';
                     }
                     return null;
@@ -124,7 +136,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _surnameController,
                   decoration: const InputDecoration(hintText: 'Фамилия'),
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    if (value == null || value.trim().isEmpty) {
                       return 'Введите фамилию';
                     }
                     return null;

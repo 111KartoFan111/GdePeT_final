@@ -17,7 +17,8 @@ class AuthService {
   Future<UserCredential?> signUpWithEmail({
     required String email,
     required String password,
-    required String displayName,
+    required String firstName,
+    required String lastName,
     String? phoneNumber,
   }) async {
     try {
@@ -26,6 +27,9 @@ class AuthService {
         password: password,
       );
 
+      // Формируем полное имя для Firebase Auth
+      final displayName = '$firstName $lastName';
+      
       // Обновляем профиль Firebase Auth
       await credential.user?.updateDisplayName(displayName);
 
@@ -35,6 +39,8 @@ class AuthService {
       // ВАЖНО: Сохраняем данные в Firestore СРАЗУ после регистрации
       await _saveUserToFirestore(
         credential.user!,
+        firstName: firstName,
+        lastName: lastName,
         phoneNumber: phoneNumber,
       );
 
@@ -89,25 +95,20 @@ class AuthService {
   Future<void> signInWithPhone({
     required String phoneNumber,
     required Function(String verificationId, int? resendToken) codeSent,
-    required Function(String error) verificationFailed,
+    required Function(FirebaseAuthException error) verificationFailed,
     required Function(PhoneAuthCredential credential) verificationCompleted,
   }) async {
-    try {
-      await _auth.verifyPhoneNumber(
-        phoneNumber: phoneNumber,
-        verificationCompleted: verificationCompleted,
-        verificationFailed: (FirebaseAuthException e) {
-          verificationFailed(_handleAuthException(e));
-        },
-        codeSent: codeSent,
-        codeAutoRetrievalTimeout: (String verificationId) {},
-      );
-    } catch (e) {
-      throw 'Ошибка отправки SMS: $e';
-    }
+    await _auth.verifyPhoneNumber(
+      phoneNumber: phoneNumber,
+      verificationCompleted: verificationCompleted,
+      verificationFailed: verificationFailed,
+      codeSent: codeSent,
+      codeAutoRetrievalTimeout: (String verificationId) {},
+      timeout: const Duration(seconds: 60),
+    );
   }
 
-  // Подтверждение кода из SMS
+  // Вход через телефон (второй шаг - проверка кода)
   Future<UserCredential?> verifyPhoneCode({
     required String verificationId,
     required String smsCode,
@@ -119,35 +120,11 @@ class AuthService {
       );
 
       final userCredential = await _auth.signInWithCredential(credential);
-      
+
       // Сохраняем данные в Firestore
       await _saveUserToFirestore(userCredential.user!);
-      
+
       return userCredential;
-    } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
-    }
-  }
-
-  // Отправить письмо для верификации email
-  Future<void> sendEmailVerification() async {
-    try {
-      await currentUser?.sendEmailVerification();
-    } catch (e) {
-      throw 'Ошибка отправки письма: $e';
-    }
-  }
-
-  // Проверить, верифицирован ли email
-  Future<bool> isEmailVerified() async {
-    await currentUser?.reload();
-    return currentUser?.emailVerified ?? false;
-  }
-
-  // Восстановление пароля
-  Future<void> resetPassword(String email) async {
-    try {
-      await _auth.sendPasswordResetEmail(email: email);
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     }
@@ -159,32 +136,70 @@ class AuthService {
     await _auth.signOut();
   }
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ: Сохранение данных пользователя в Firestore
+  // Удалить аккаунт
+  Future<void> deleteAccount() async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      await _firestore.collection('users').doc(user.uid).delete();
+      await user.delete();
+    }
+  }
+
+  // Отправить письмо для сброса пароля
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    }
+  }
+
+  // Повторно отправить письмо для верификации
+  Future<void> sendEmailVerification() async {
+    final user = _auth.currentUser;
+    if (user != null && !user.emailVerified) {
+      await user.sendEmailVerification();
+    }
+  }
+
+  // Обновить пароль
+  Future<void> updatePassword(String newPassword) async {
+    try {
+      await _auth.currentUser?.updatePassword(newPassword);
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    }
+  }
+
+  // Сохранить данные пользователя в Firestore
   Future<void> _saveUserToFirestore(
     User user, {
+    String? firstName,
+    String? lastName,
     String? phoneNumber,
   }) async {
     try {
       // Проверяем, существует ли уже документ пользователя
       final userDoc = await _firestore.collection('users').doc(user.uid).get();
       
-      // Разделяем displayName на имя и фамилию
-      String? firstName;
-      String? lastName;
+      // ИСПРАВЛЕНИЕ: Используем переданные firstName и lastName напрямую
+      // Если они не переданы (например, при Google входе), пытаемся разделить displayName
+      String? fName = firstName;
+      String? lName = lastName;
       
-      if (user.displayName != null && user.displayName!.isNotEmpty) {
-        final nameParts = user.displayName!.split(' ');
-        firstName = nameParts.isNotEmpty ? nameParts[0] : null;
-        lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : null;
+      if (fName == null && lName == null && user.displayName != null && user.displayName!.isNotEmpty) {
+        final nameParts = user.displayName!.trim().split(RegExp(r'\s+'));
+        fName = nameParts.isNotEmpty ? nameParts[0] : null;
+        lName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : null;
       }
 
       final userData = {
         'uid': user.uid,
         'email': user.email,
         'phoneNumber': phoneNumber ?? user.phoneNumber,
-        'displayName': user.displayName ?? '', // ВАЖНО: сохраняем полное имя
-        'firstName': firstName,
-        'lastName': lastName,
+        'displayName': user.displayName ?? '', // ВАЖНО: сохраняем полное имя для совместимости
+        'firstName': fName,
+        'lastName': lName,
         'photoURL': user.photoURL,
         'isEmailVerified': user.emailVerified,
         'postsCount': 0,
@@ -193,7 +208,6 @@ class AuthService {
 
       // Если документ не существует, добавляем createdAt
       if (!userDoc.exists) {
-        // ИСПРАВЛЕНИЕ: Используем ISO-строку вместо FieldValue.serverTimestamp()
         userData['createdAt'] = DateTime.now().toIso8601String();
       }
       
@@ -204,6 +218,7 @@ class AuthService {
           .set(userData, SetOptions(merge: true));
           
       print('User data saved to Firestore successfully: ${user.uid}');
+      print('firstName: $fName, lastName: $lName'); // Для отладки
     } catch (e) {
       print('Error saving user to Firestore: $e');
     }

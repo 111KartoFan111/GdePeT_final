@@ -734,74 +734,96 @@ String _getMethodName(String method) {
             ),
           ),
           
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              height: MediaQuery.of(context).size.height * 0.5,
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                 color: Color(0xFFF9E1E1),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(40),
-                  topRight: Radius.circular(40),
+          // --- ИЗМЕНЕНИЕ: Замена Align на DraggableScrollableSheet ---
+          DraggableScrollableSheet(
+            initialChildSize: 0.5, // 50%
+            minChildSize: 0.5,     // 50%
+            maxChildSize: 0.9,     // 90% (почти полный экран)
+            builder: (context, scrollController) {
+              return Container(
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF9E1E1),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(40),
+                    topRight: Radius.circular(40),
+                  ),
                 ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 40, 24, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Column( // Колонка для "ручки", контента и кнопок
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                         Expanded(
-                           child: Text(
-                            widget.pet.petName,
-                            style: const TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                                                   ),
-                         ),
-                        IconButton(
-                          onPressed: () async {
-                            if (authProvider.user == null) return;
-                            await favoritesProvider.toggleFavorite(authProvider.user!.uid, widget.pet.id);
-                          },
-                          icon: Icon(
-                            isFav ? Icons.favorite : Icons.favorite_border,
-                            color: isFav ? Colors.redAccent : Colors.black,
-                            size: 32,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${widget.pet.type.displayName} • ${widget.pet.ownerName}',
-                      style: const TextStyle(fontSize: 16, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: Text(
-                          widget.pet.description,
-                          style: const TextStyle(
-                            fontSize: 16, 
-                            color: Colors.black,
-                            height: 1.4,
-                          ),
-                        ),
+                    // 1. "Ручка" для перетаскивания
+                    Container(
+                      width: 50,
+                      height: 5,
+                      margin: const EdgeInsets.only(top: 12.0),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(2.5),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    _buildActionButtons(),
+
+                    // 2. Основной контент (который будет скроллиться)
+                    Expanded(
+                      child: ListView(
+                        controller: scrollController, // <--- ВАЖНО
+                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  widget.pet.petName,
+                                  style: const TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () async {
+                                  if (authProvider.user == null) return;
+                                  await favoritesProvider.toggleFavorite(authProvider.user!.uid, widget.pet.id);
+                                },
+                                icon: Icon(
+                                  isFav ? Icons.favorite : Icons.favorite_border,
+                                  color: isFav ? Colors.redAccent : Colors.black,
+                                  size: 32,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '${widget.pet.type.displayName} • ${widget.pet.ownerName}',
+                            style: const TextStyle(fontSize: 16, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            widget.pet.description,
+                            style: const TextStyle(
+                              fontSize: 16, 
+                              color: Colors.black,
+                              height: 1.4,
+                            ),
+                          ),
+                          // Добавим отступ снизу, чтобы текст не прилипал к кнопкам
+                          const SizedBox(height: 24), 
+                        ],
+                      ),
+                    ),
+
+                    // 3. Кнопки (остаются внизу)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                      child: _buildActionButtons(),
+                    ),
                   ],
                 ),
-              ),
-            ),
+              );
+            },
           ),
+          // --- КОНЕЦ ИЗМЕНЕНИЯ ---
         ],
       ),
     );
@@ -872,28 +894,7 @@ String _getMethodName(String method) {
                 ),
               ),
             ),
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const VetClinicsScreen(),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.local_hospital),
-              label: const Text('Ближайшие ветклиники'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4CAF50), // Зеленый цвет для медицины
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-            ),
           ],
-
         )
       ],
     );

@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
-// import '../models/user_model.dart'; // <-- УДАЛЕНО
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
   
   User? _user;
-  // UserModel? _userModel; // <-- УДАЛЕНО
   bool _isLoading = false;
   String? _error;
   bool _isGuest = false;
 
   User? get user => _user;
-  // UserModel? get userModel => _userModel; // <-- УДАЛЕНО
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isAuthenticated => _user != null;
@@ -22,25 +19,16 @@ class AuthProvider extends ChangeNotifier {
   AuthProvider() {
     _authService.authStateChanges.listen((User? user) {
       _user = user;
-      // Логика _loadUserData() удалена,
-      // она будет в AuthWrapper в main.dart
-      // if (user != null) { 
-      //   _loadUserData();
-      // } else {
-      //   _userModel = null;
-      // }
       notifyListeners();
     });
   }
-
-  // Загрузка данных пользователя из Firestore
-  // Future<void> _loadUserData() async { ... } // <-- УДАЛЕНО
 
   // Регистрация через email
   Future<bool> signUpWithEmail({
     required String email,
     required String password,
-    required String displayName,
+    required String firstName,
+    required String lastName,
     String? phoneNumber,
   }) async {
     try {
@@ -50,7 +38,8 @@ class AuthProvider extends ChangeNotifier {
       await _authService.signUpWithEmail(
         email: email,
         password: password,
-        displayName: displayName,
+        firstName: firstName,
+        lastName: lastName,
         phoneNumber: phoneNumber,
       );
 
@@ -117,13 +106,15 @@ class AuthProvider extends ChangeNotifier {
           _verificationId = verificationId;
           _setLoading(false);
         },
-        verificationFailed: (String error) {
-          _error = error;
+        verificationFailed: (FirebaseAuthException e) {
+          _error = e.message ?? 'Ошибка верификации телефона';
           _setLoading(false);
         },
         verificationCompleted: (PhoneAuthCredential credential) async {
-          // Автоматическая верификация (Android)
-          await FirebaseAuth.instance.signInWithCredential(credential);
+          await _authService.verifyPhoneCode(
+            verificationId: _verificationId!,
+            smsCode: credential.smsCode!,
+          );
           _setLoading(false);
         },
       );
@@ -136,7 +127,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // Подтвердить код из SMS
+  // Проверить код из SMS
   Future<bool> verifyPhoneCode(String smsCode) async {
     if (_verificationId == null) {
       _error = 'Сначала отправьте код';
@@ -161,33 +152,41 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // Отправить письмо для верификации email
-  Future<void> sendEmailVerification() async {
-    try {
-      await _authService.sendEmailVerification();
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-    }
+  // Выход
+  Future<void> signOut() async {
+    await _authService.signOut();
+    _isGuest = false;
+    notifyListeners();
   }
 
-  // Проверить верификацию email
-  Future<bool> checkEmailVerification() async {
-    final isVerified = await _authService.isEmailVerified();
-    // Логика _loadUserData() удалена
-    // if (isVerified) {
-    //   await _loadUserData();
-    // }
-    return isVerified;
+  // Войти как гость
+  void continueAsGuest() {
+    _isGuest = true;
+    notifyListeners();
   }
 
-  // Сброс пароля
-  Future<bool> resetPassword(String email) async {
+  // Удалить аккаунт
+  Future<void> deleteAccount() async {
     try {
       _setLoading(true);
       _error = null;
 
-      await _authService.resetPassword(email);
+      await _authService.deleteAccount();
+
+      _setLoading(false);
+    } catch (e) {
+      _error = e.toString();
+      _setLoading(false);
+    }
+  }
+
+  // Отправить письмо для сброса пароля
+  Future<bool> sendPasswordResetEmail(String email) async {
+    try {
+      _setLoading(true);
+      _error = null;
+
+      await _authService.sendPasswordResetEmail(email);
 
       _setLoading(false);
       return true;
@@ -198,17 +197,39 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // Режим гостя
-  void continueAsGuest() {
-    _isGuest = true;
-    notifyListeners();
+  // Повторно отправить письмо для верификации email
+  Future<bool> sendEmailVerification() async {
+    try {
+      _setLoading(true);
+      _error = null;
+
+      await _authService.sendEmailVerification();
+
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _setLoading(false);
+      return false;
+    }
   }
 
-  // Выход
-  Future<void> signOut() async {
-    await _authService.signOut();
-    _isGuest = false;
-    notifyListeners();
+  // Проверить верификацию email
+  Future<bool> checkEmailVerification() async {
+    try {
+      await _user?.reload();
+      _user = _authService.currentUser;
+      notifyListeners();
+      return _user?.emailVerified ?? false;
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    }
+  }
+
+  // Сбросить пароль (алиас для sendPasswordResetEmail)
+  Future<bool> resetPassword(String email) async {
+    return await sendPasswordResetEmail(email);
   }
 
   void _setLoading(bool value) {

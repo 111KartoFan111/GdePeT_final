@@ -23,21 +23,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // ИЗМЕНЕНИЕ: Убираем _loadProfile(),
-    // так как AuthWrapper теперь загружает профиль заранее.
-    // Оставляем только загрузку постов юзера.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadUserPetsCount();
     });
   }
 
-  // ИЗМЕНЕНИЕ: _loadProfile переименован и упрощен
   Future<void> _loadUserPetsCount() async {
     final authProvider = context.read<AuthProvider>();
     final petProvider = context.read<PetProvider>();
     
     if (authProvider.user != null) {
-      // profileProvider уже должен быть загружен
       await petProvider.loadUserPets(authProvider.user!.uid);
       
       if (mounted) {
@@ -99,21 +94,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return _buildGuestView();
     }
 
-    // ИЗМЕНЕНИЕ: Убрана проверка isLoading,
-    // так как AuthWrapper ждет загрузки
-    // if (profileProvider.isLoading && profileProvider.profile == null) {
-    //   return const Scaffold(
-    //     body: Center(
-    //       child: CircularProgressIndicator(color: Color(0xFFEE8A9A)),
-    //     ),
-    //   );
-    // }
-
     final profile = profileProvider.profile;
-
-    // ИСПРАВЛЕНИЕ: Убираем fallback на authProvider.user.displayName
     final displayName = profile?.displayName ?? 'Пользователь';
-        
     final initials = profile?.initials ?? 
         (displayName.isNotEmpty ? displayName[0].toUpperCase() : 'П');
 
@@ -145,7 +127,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: _loadUserPetsCount, // <-- ИЗМЕНЕНИЕ
+        onRefresh: _loadUserPetsCount,
         color: const Color(0xFFEE8A9A),
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -163,10 +145,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ? NetworkImage(profile!.photoURL!)
                         : null,
                     child: profile?.photoURL == null
-                        ? const Icon(
-                            Icons.person,
-                            size: 60,
-                            color: Colors.grey,
+                        ? Text(
+                            initials,
+                            style: const TextStyle(
+                              fontSize: 40,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
                           )
                         : null,
                   ),
@@ -242,11 +227,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     MaterialPageRoute(
                       builder: (context) => const EditProfileScreen(),
                     ),
-                  ).then((_) {
-                    // ИЗМЕНЕНИЕ: Не нужно перезагружать,
-                    // т.к. профиль обновится по подписке
-                    // _loadUserPetsCount(); 
-                  });
+                  );
                 },
               ),
               
@@ -273,7 +254,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     MaterialPageRoute(
                       builder: (context) => const UserPetsScreen(),
                     ),
-                  ).then((_) => _loadUserPetsCount()); // <-- ИЗМЕНЕНИЕ
+                  ).then((_) => _loadUserPetsCount());
                 },
               ),
               

@@ -85,47 +85,19 @@ class AuthWrapper extends StatelessWidget {
         future: _loadInitialUserData(context, authProvider.user!.uid),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            // Показываем индикатор загрузки, пока грузится профиль
             return const Scaffold(
               body: Center(
-                child: CircularProgressIndicator(color: Color(0xFFEE8A9A)),
-              ),
-            );
-          }
-          
-          if (snapshot.hasError) {
-             // Показываем ошибку, если профиль не загрузился
-            return Scaffold(
-              body: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Ошибка загрузки профиля: ${snapshot.error}'),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: () {
-                          // Попробовать перезагрузить
-                          (context as Element).reassemble();
-                        },
-                        child: const Text('Попробовать снова'),
-                      )
-                    ],
-                  ),
+                child: CircularProgressIndicator(
+                  color: Color(0xFFEE8A9A),
                 ),
               ),
             );
           }
-
+          
           // Профиль загружен, показываем главный экран
           return const MainNavShell();
         },
       );
-    }
-
-    if (authProvider.isGuest) {
-      return const MainNavShell();
     }
 
     return const WelcomeScreen();
