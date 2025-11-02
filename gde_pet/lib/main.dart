@@ -61,61 +61,96 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
 
-  // --- ИСПРАВЛЕНИЕ: Убираем Future/await и loadProfile ---
-  void _loadInitialUserData(BuildContext context, String uid) {
-    final profileProvider = context.read<ProfileProvider>();
-    final favoritesProvider = context.read<FavoritesProvider>();
-    
-    // Загружаем/подписываемся, только если профиль не загружен
-    if (profileProvider.profile == null || profileProvider.profile!.uid != uid) {
-      // Вызываем subscribeToProfile, который теперь управляет isLoading
-      profileProvider.subscribeToProfile(uid);
-    }
-    // Загружаем избранное
-    favoritesProvider.loadFavorites(uid);
-  }
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  bool _hasInitialized = false;
+  String? _lastUid;
+  bool _isWaitingForProfile = false;
 
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
+    final profileProvider = context.watch<ProfileProvider>();
 
     if (authProvider.isAuthenticated) {
       final user = authProvider.user!;
       final isEmailPasswordUser = user.providerData.any((p) => p.providerId == 'password');
 
+      // Проверка верификации email для пользователей с email/password
       if (isEmailPasswordUser && !user.emailVerified) {
+        _hasInitialized = false;
+        _lastUid = null;
+        _isWaitingForProfile = false;
         return const EmailVerificationScreen();
       }
 
-      // --- ИСПРАВЛЕНИЕ: Убираем FutureBuilder и используем watch ---
-      
-      // 1. Вызываем загрузку данных
-      _loadInitialUserData(context, user.uid);
-      
-      // 2. Слушаем ProfileProvider
-      final profileProvider = context.watch<ProfileProvider>();
-
-      // 3. Показываем загрузку, пока isLoading или profile == null
-      if (profileProvider.isLoading || profileProvider.profile == null) {
-        return const Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(
-              color: Color(0xFFEE8A9A),
-            ),
-          ),
-        );
+      // Инициализируем данные только один раз или при смене пользователя
+      if (!_hasInitialized || _lastUid != user.uid) {
+        print("AuthWrapper: Initializing data for user ${user.uid}");
+        _hasInitialized = true;
+        _lastUid = user.uid;
+        _isWaitingForProfile = true;
+        
+        // Подписываемся на профиль
+        profileProvider.subscribeToProfile(user.uid);
+        
+        // Загружаем избранное
+        final favoritesProvider = context.read<FavoritesProvider>();
+        favoritesProvider.loadFavorites(user.uid);
+        
+        // ИСПРАВЛЕНИЕ: Устанавливаем таймаут для загрузки профиля
+        Future.delayed(const Duration(seconds: 5), () {
+          if (mounted && _isWaitingForProfile && profileProvider.profile == null) {
+            print("AuthWrapper: Profile loading timeout, forcing navigation");
+            setState(() {
+              _isWaitingForProfile = false;
+            });
+          }
+        });
       }
-      
-      // 4. Профиль загружен, показываем главный экран
-      return const MainNavShell();
-      // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
+
+      // ИСПРАВЛЕНИЕ: Показываем главный экран если:
+      // 1. Профиль загружен
+      // 2. ИЛИ прошел таймаут ожидания
+      if (profileProvider.profile != null || !_isWaitingForProfile) {
+        if (profileProvider.profile != null) {
+          print("AuthWrapper: Profile loaded successfully");
+        } else {
+          print("AuthWrapper: Proceeding without profile (timeout)");
+        }
+        return const MainNavShell();
+      }
+
+      // Показываем загрузку
+      return const Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(
+                color: Color(0xFFEE8A9A),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Загрузка профиля...',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     // Пользователь не авторизован
+    _hasInitialized = false;
+    _lastUid = null;
+    _isWaitingForProfile = false;
     return const WelcomeScreen();
   }
 }
-

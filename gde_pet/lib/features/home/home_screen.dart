@@ -9,7 +9,7 @@ import '../../models/pet_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/profile_provider.dart';
 import '../../providers/favorites_provider.dart';
-import 'package:timeago/timeago.dart' as timeago; // <-- ДОБАВЛЕНО
+import 'package:timeago/timeago.dart' as timeago;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -30,16 +30,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadInitialData() async {
     final petProvider = context.read<PetProvider>();
     final authProvider = context.read<AuthProvider>();
-    // final profileProvider = context.read<ProfileProvider>(); // <-- УДАЛЕНО
     final favoritesProvider = context.read<FavoritesProvider>();
     
     // Загружаем ВСЕ активные объявления
     await petProvider.loadPets();
-    
-    // Профиль теперь загружается в AuthWrapper
-    // if (authProvider.user != null && profileProvider.profile == null) { // <-- УДАЛЕНО
-    //   await profileProvider.loadProfile(authProvider.user!.uid);
-    // }
 
     if (authProvider.user != null) {
       await favoritesProvider.loadFavorites(authProvider.user!.uid);
@@ -53,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-  final petProvider = context.watch<PetProvider>();
+    final petProvider = context.watch<PetProvider>();
     
     // Фильтруем по статусу ПОСЛЕ загрузки всех питомцев
     final lostPets = petProvider.pets
@@ -114,6 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildAppBar(BuildContext context) {
     final profileProvider = context.watch<ProfileProvider>();
     
+    // ИСПРАВЛЕНИЕ: Безопасная обработка null профиля
     final displayName = profileProvider.profile?.displayName ?? 'Пользователь';
     
     final firstName = displayName.trim().isEmpty
@@ -203,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return Container(
-      height: 280, // ИЗМЕНЕНО: Увеличена высота для текста
+      height: 280,
       padding: const EdgeInsets.only(top: 16),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
@@ -247,10 +242,8 @@ class PetCard extends StatelessWidget {
     final favoritesProvider = context.watch<FavoritesProvider>();
     final isFav = favoritesProvider.isFavorite(petModel.id);
     
-    // --- ДОБАВЛЕНО TIMEAGO ---
     timeago.setLocaleMessages('ru', timeago.RuMessages());
     final timeAgo = timeago.format(petModel.createdAt, locale: 'ru');
-    // --- КОНЕЦ ---
     
     return GestureDetector(
       onTap: onTap ?? () {
@@ -276,18 +269,16 @@ class PetCard extends StatelessWidget {
           ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start, // ИЗМЕНЕНО
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Изображение
             Expanded(
-              flex: 3, // ИЗМЕНЕНО
+              flex: 3,
               child: Stack(
                 children: [
-                  // Фото питомца
                   Container(
-                    width: double.infinity, // Добавлено для заполнения ширины
+                    width: double.infinity,
                     decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(30)), // ИЗМЕНЕНО
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
                       image: petModel.imageUrls.isNotEmpty
                           ? DecorationImage(
                               image: NetworkImage(petModel.imageUrls[0]),
@@ -298,7 +289,7 @@ class PetCard extends StatelessWidget {
                     child: petModel.imageUrls.isEmpty
                         ? Container(
                             decoration: BoxDecoration(
-                              borderRadius: const BorderRadius.vertical(top: Radius.circular(30)), // ИЗМЕНЕНО
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
                               color: color.withOpacity(0.3),
                             ),
                             child: const Center(
@@ -311,7 +302,6 @@ class PetCard extends StatelessWidget {
                           )
                         : null,
                   ),
-                  // --- УДАЛЕН БЛОК СТАТУСА (Positioned Top Left) ---
                   Positioned(
                     top: 12,
                     right: 12,
@@ -326,7 +316,7 @@ class PetCard extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.8), // ИЗМЕНЕНО
+                          color: Colors.white.withOpacity(0.8),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
@@ -348,22 +338,19 @@ class PetCard extends StatelessWidget {
               ),
             ),
             
-            // --- НОВЫЙ БЛОК ИНФОРМАЦИИ ---
             Expanded(
               flex: 2,
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween, // ИЗМЕНЕНО
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // --- ГРУППА: КЛИЧКА И ТИП ---
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Кличка
                         Text(
-                          title, // Это petName
+                          title,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -371,10 +358,9 @@ class PetCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 4), // Добавлен отступ
-                        // Тип
+                        const SizedBox(height: 4),
                         Text(
-                          petModel.type.displayName, // Тип питомца
+                          petModel.type.displayName,
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[700],
@@ -385,18 +371,16 @@ class PetCard extends StatelessWidget {
                       ],
                     ),
                     
-                    // --- ГРУППА: ЛОКАЦИЯ И ДАТА ---
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Локация
                         Row(
                           children: [
                             Icon(Icons.location_on_outlined, size: 14, color: Colors.grey[600]),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
-                                location, // Это адрес
+                                location,
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey[600],
@@ -407,8 +391,7 @@ class PetCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4), // Добавлен отступ
-                        // --- ДОБАВЛЕНА ДАТА ---
+                        const SizedBox(height: 4),
                         Text(
                           timeAgo,
                           style: TextStyle(
@@ -424,11 +407,9 @@ class PetCard extends StatelessWidget {
                 ),
               ),
             ),
-            // --- КОНЕЦ НОВОГО БЛОКА ---
           ],
         ),
       ),
     );
   }
 }
-

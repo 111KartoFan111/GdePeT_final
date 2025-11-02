@@ -13,7 +13,7 @@ class AuthService {
   // Поток изменений авторизации
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
-  // Регистрация через email и пароль
+  // ИСПРАВЛЕНИЕ: Регистрация через email и пароль
   Future<UserCredential?> signUpWithEmail({
     required String email,
     required String password,
@@ -22,19 +22,25 @@ class AuthService {
     String? phoneNumber,
   }) async {
     try {
+      print("AuthService: Starting signUpWithEmail");
+      
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+
+      print("AuthService: User created in Firebase Auth: ${credential.user?.uid}");
 
       // Формируем полное имя для Firebase Auth
       final displayName = '$firstName $lastName';
       
       // Обновляем профиль Firebase Auth
       await credential.user?.updateDisplayName(displayName);
+      print("AuthService: DisplayName updated to: $displayName");
 
       // Отправляем письмо для верификации
       await credential.user?.sendEmailVerification();
+      print("AuthService: Verification email sent");
 
       // ВАЖНО: Сохраняем данные в Firestore СРАЗУ после регистрации
       await _saveUserToFirestore(
@@ -43,10 +49,16 @@ class AuthService {
         lastName: lastName,
         phoneNumber: phoneNumber,
       );
+      
+      print("AuthService: User data saved to Firestore");
 
       return credential;
     } on FirebaseAuthException catch (e) {
+      print("AuthService: FirebaseAuthException - ${e.code}: ${e.message}");
       throw _handleAuthException(e);
+    } catch (e) {
+      print("AuthService: Unexpected error - $e");
+      rethrow;
     }
   }
 
@@ -56,21 +68,51 @@ class AuthService {
     required String password,
   }) async {
     try {
+      print("AuthService: Starting signInWithEmail");
+      
       final credential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
+      
+      print("AuthService: User signed in: ${credential.user?.uid}");
+      
+      // ИСПРАВЛЕНИЕ: Обновляем данные в Firestore при каждом входе
+      // Это гарантирует, что isEmailVerified будет актуален
+      if (credential.user != null) {
+        await _updateUserVerificationStatus(credential.user!);
+      }
+      
       return credential;
     } on FirebaseAuthException catch (e) {
+      print("AuthService: FirebaseAuthException - ${e.code}: ${e.message}");
       throw _handleAuthException(e);
+    }
+  }
+
+  // ДОБАВЛЕНО: Обновление статуса верификации
+  Future<void> _updateUserVerificationStatus(User user) async {
+    try {
+      await _firestore.collection('users').doc(user.uid).update({
+        'isEmailVerified': user.emailVerified,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      print("AuthService: Email verification status updated: ${user.emailVerified}");
+    } catch (e) {
+      print("AuthService: Error updating verification status: $e");
     }
   }
 
   // Вход через Google
   Future<UserCredential?> signInWithGoogle() async {
     try {
+      print("AuthService: Starting Google sign-in");
+      
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return null;
+      if (googleUser == null) {
+        print("AuthService: Google sign-in cancelled by user");
+        return null;
+      }
 
       final GoogleSignInAuthentication googleAuth = 
           await googleUser.authentication;
@@ -81,12 +123,14 @@ class AuthService {
       );
 
       final userCredential = await _auth.signInWithCredential(credential);
+      print("AuthService: Google sign-in successful: ${userCredential.user?.uid}");
 
       // Сохраняем данные в Firestore
       await _saveUserToFirestore(userCredential.user!);
 
       return userCredential;
     } catch (e) {
+      print("AuthService: Google sign-in error: $e");
       throw 'Ошибка входа через Google: $e';
     }
   }
@@ -171,7 +215,7 @@ class AuthService {
     }
   }
 
-  // Сохранить данные пользователя в Firestore
+  // ИСПРАВЛЕНИЕ: Сохранить данные пользователя в Firestore
   Future<void> _saveUserToFirestore(
     User user, {
     String? firstName,
@@ -179,48 +223,55 @@ class AuthService {
     String? phoneNumber,
   }) async {
     try {
+      print("AuthService: Saving user to Firestore - UID: ${user.uid}");
+      
       // Проверяем, существует ли уже документ пользователя
       final userDoc = await _firestore.collection('users').doc(user.uid).get();
       
-      // ИСПРАВЛЕНИЕ: Используем переданные firstName и lastName напрямую
-      // Если они не переданы (например, при Google входе), пытаемся разделить displayName
+      // Обрабатываем имя и фамилию
       String? fName = firstName;
       String? lName = lastName;
       
+      // Если firstName и lastName не переданы, пробуем получить из displayName
       if (fName == null && lName == null && user.displayName != null && user.displayName!.isNotEmpty) {
         final nameParts = user.displayName!.trim().split(RegExp(r'\s+'));
         fName = nameParts.isNotEmpty ? nameParts[0] : null;
         lName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : null;
       }
 
+      print("AuthService: Parsed names - firstName: $fName, lastName: $lName");
+
       final userData = {
         'uid': user.uid,
         'email': user.email,
         'phoneNumber': phoneNumber ?? user.phoneNumber,
-        'displayName': user.displayName ?? '', // ВАЖНО: сохраняем полное имя для совместимости
         'firstName': fName,
         'lastName': lName,
         'photoURL': user.photoURL,
         'isEmailVerified': user.emailVerified,
+        'updatedAt': FieldValue.serverTimestamp(),
         'postsCount': 0,
         'foundPetsCount': 0,
       };
 
       // Если документ не существует, добавляем createdAt
       if (!userDoc.exists) {
-        userData['createdAt'] = DateTime.now().toIso8601String();
+        userData['createdAt'] = FieldValue.serverTimestamp();
+        print("AuthService: Creating new user document");
+      } else {
+        print("AuthService: Updating existing user document");
       }
       
-      // Используем merge: true для обновления только новых полей
+      // Используем set с merge: true для обновления только новых полей
       await _firestore
           .collection('users')
           .doc(user.uid)
           .set(userData, SetOptions(merge: true));
           
-      print('User data saved to Firestore successfully: ${user.uid}');
-      print('firstName: $fName, lastName: $lName'); // Для отладки
+      print("AuthService: User data saved successfully");
     } catch (e) {
-      print('Error saving user to Firestore: $e');
+      print("AuthService: Error saving user to Firestore: $e");
+      // Не пробрасываем ошибку, чтобы не блокировать регистрацию
     }
   }
 

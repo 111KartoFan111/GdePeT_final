@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/profile_model.dart';
 import '../services/profile_service.dart';
+import 'dart:async';
 
 class ProfileProvider extends ChangeNotifier {
   final ProfileService _profileService = ProfileService();
@@ -9,6 +10,7 @@ class ProfileProvider extends ChangeNotifier {
   ProfileModel? _profile;
   bool _isLoading = false;
   String? _error;
+  StreamSubscription? _profileSubscription;
 
   ProfileModel? get profile => _profile;
   bool get isLoading => _isLoading;
@@ -104,38 +106,56 @@ class ProfileProvider extends ChangeNotifier {
     }
   }
 
-  // Подписаться на обновления профиля
+  // ИСПРАВЛЕНИЕ: Подписаться на обновления профиля
   void subscribeToProfile(String uid) {
-    // Если уже подписаны на этого пользователя, выходим
-    if (_profile != null && _profile!.uid == uid && !_isLoading) return; 
+    // Отменяем предыдущую подписку, если есть
+    _profileSubscription?.cancel();
     
-    print("Subscribing to profile for UID: $uid");
-    _setLoading(true); // Устанавливаем загрузку
+    // Если уже подписаны на этого пользователя и профиль загружен, выходим
+    if (_profile != null && _profile!.uid == uid && !_isLoading) {
+      print("ProfileProvider: Already subscribed to profile $uid");
+      return;
+    }
+    
+    print("ProfileProvider: Subscribing to profile for UID: $uid");
+    _setLoading(true);
     _error = null;
     
-    _profileService.getProfileStream(uid).listen((profile) {
-      print("Profile stream update received: ${profile?.displayName}");
-      
-      // --- ИСПРАВЛЕНИЕ: (убираем if) ---
-      // Мы всегда обновляем профиль (даже если пришел null)
-      // и ВСЕГДА выключаем загрузку.
-      // AuthWrapper в main.dart все равно будет показывать
-      // загрузку, если profile == null.
-      _profile = profile;
-      _isLoading = false; // Загрузка завершена
-      notifyListeners();
-      
-      if (profile == null) {
-        print("Profile stream received null, waiting for doc creation...");
+    // ИСПРАВЛЕНИЕ: Добавляем таймаут на загрузку
+    Timer? timeoutTimer = Timer(const Duration(seconds: 4), () {
+      if (_isLoading && _profile == null) {
+        print("ProfileProvider: Loading timeout reached, profile may not exist");
+        _isLoading = false;
+        _error = 'Профиль не найден';
+        notifyListeners();
       }
-      // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
-      
-    }, onError: (e) {
-      print("Error in profile stream: $e");
-      _error = e.toString();
-      _isLoading = false; // Завершаем загрузку при ошибке
-      notifyListeners();
     });
+    
+    _profileSubscription = _profileService.getProfileStream(uid).listen(
+      (profile) {
+        timeoutTimer?.cancel();
+        print("ProfileProvider: Profile stream update received");
+        
+        // Всегда обновляем профиль и выключаем загрузку
+        _profile = profile;
+        _isLoading = false;
+        _error = null;
+        notifyListeners();
+        
+        if (profile != null) {
+          print("ProfileProvider: Profile loaded - ${profile.displayName}");
+        } else {
+          print("ProfileProvider: Profile is null, document may not exist yet");
+        }
+      },
+      onError: (e) {
+        timeoutTimer?.cancel();
+        print("ProfileProvider: Error in profile stream: $e");
+        _error = e.toString();
+        _isLoading = false;
+        notifyListeners();
+      },
+    );
   }
 
   void _setLoading(bool value) {
@@ -149,9 +169,16 @@ class ProfileProvider extends ChangeNotifier {
   }
 
   void clear() {
+    _profileSubscription?.cancel();
     _profile = null;
     _error = null;
+    _isLoading = false;
     notifyListeners();
   }
-}
 
+  @override
+  void dispose() {
+    _profileSubscription?.cancel();
+    super.dispose();
+  }
+}
