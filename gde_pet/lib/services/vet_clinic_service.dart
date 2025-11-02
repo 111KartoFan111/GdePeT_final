@@ -5,14 +5,15 @@ import '../models/vet_clinic_model.dart';
 
 class VetClinicService {
   
-  // --- ИЗМЕНЕНИЕ: Вставьте свой API ключ сюда ---
-  static const String _apiKey = "AIzaSyDDkgc4n89MHw1s4C22PgiacKdBDfUrvFM"; 
+  static const String _apiKey = ""; 
   // -------------------------------------------
 
   final String _nearbySearchUrl = 
       'https://maps.googleapis.com/maps/api/place/nearbysearch/json';
 
-  /// ИЗМЕНЕНИЕ: Новый метод для загрузки клиник из API
+  final String _placeDetailsUrl =
+      'https://maps.googleapis.com/maps/api/place/details/json';
+
   Future<List<VetClinic>> fetchVetClinics(LatLng userLocation) async {
     // Формируем URL запроса
     final String url = 
@@ -55,4 +56,48 @@ class VetClinicService {
     }
   }
 
+  // +++ ДОБАВЛЕН НОВЫЙ МЕТОД: getClinicDetails +++
+  /// Загружает детальную информацию для одной клиники
+  Future<VetClinic> getClinicDetails(String placeId, VetClinic existingClinic) async {
+    // Запрашиваем только нужные поля: номер, сайт и часы работы
+    final String url = 
+        '$_placeDetailsUrl?placeid=$placeId'
+        '&fields=formatted_phone_number,website,opening_hours'
+        '&language=ru'
+        '&key=$_apiKey';
+
+    try {
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        
+        if (data['status'] == 'OK') {
+          final result = data['result'] as Map<String, dynamic>;
+          
+          // Парсим часы работы, если они есть
+          String? workingHours;
+          if (result['opening_hours'] != null && result['opening_hours']['weekday_text'] != null) {
+            workingHours = (result['opening_hours']['weekday_text'] as List<dynamic>).join('\n');
+          }
+
+          // Возвращаем обновленную модель, используя copyWith
+          return existingClinic.copyWith(
+            phone: result['formatted_phone_number'],
+            website: result['website'],
+            workingHours: workingHours,
+          );
+        } else {
+          throw 'Ошибка Google Details API: ${data['error_message'] ?? data['status']}';
+        }
+      } else {
+        throw 'Ошибка сети: ${response.statusCode}';
+      }
+    } catch (e) {
+      print('Ошибка getClinicDetails: $e');
+      // Возвращаем старую клинику, если произошла ошибка
+      return existingClinic;
+    }
+  }
+  // +++ КОНЕЦ +++
 }

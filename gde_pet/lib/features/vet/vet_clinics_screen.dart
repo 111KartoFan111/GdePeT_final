@@ -201,6 +201,21 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
       ),
       // ИЗМЕНЕНИЕ: Основной контент теперь управляется FutureBuilder
       body: _buildBody(),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFFEE8A9A),
+        onPressed: _getCurrentLocation, // Вызывает обновление местоположения
+        tooltip: 'Мое местоположение',
+        child: _isLoadingLocation
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            : const Icon(Icons.my_location, color: Colors.white),
+      ),
     );
   }
 
