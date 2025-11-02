@@ -15,23 +15,22 @@ class VetClinicsScreen extends StatefulWidget {
 
 class _VetClinicsScreenState extends State<VetClinicsScreen> {
   LatLng? _currentLocation;
-  bool _isLoadingLocation = false;
+  bool _isLoadingLocation = true; // ИЗМЕНЕНИЕ: Начинаем с загрузки
   List<VetClinic> _clinics = [];
   bool _showMapView = false;
   final MapController _mapController = MapController();
 
+  // ИЗМЕНЕНИЕ: Добавили Future для FutureBuilder
+  Future<List<VetClinic>>? _clinicsFuture;
+  final VetClinicService _vetService = VetClinicService();
+
   @override
   void initState() {
     super.initState();
-    _loadClinics();
     _getCurrentLocation();
   }
 
-  void _loadClinics() {
-    setState(() {
-      _clinics = VetClinicService.getVetClinics();
-    });
-  }
+  // ИЗМЕНЕНИЕ: Удалили _loadClinics()
 
   Future<void> _getCurrentLocation() async {
     setState(() {
@@ -52,32 +51,42 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
       }
 
       final position = await Geolocator.getCurrentPosition();
+      
       setState(() {
         _currentLocation = LatLng(position.latitude, position.longitude);
-        // Сортируем клиники по расстоянию
-        _clinics = VetClinicService.getSortedByDistance(_currentLocation!);
         _isLoadingLocation = false;
+        // Запускаем загрузку клиник ПОСЛЕ получения геолокации
+        _clinicsFuture = _vetService.fetchVetClinics(_currentLocation!);
       });
+
     } catch (e) {
       setState(() {
         _isLoadingLocation = false;
-      });
+        // Если не удалось получить геолокацию, 
+        // все равно запускаем поиск (API использует IP, если нет координат)
+        // или используем координаты по умолчанию (Астана)
+        _currentLocation = LatLng(51.169392, 71.449074); // Центр Астаны
+        _clinicsFuture = _vetService.fetchVetClinics(_currentLocation!);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
-            content: Text('Ошибка определения местоположения: $e'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
+              content: Text('Ошибка геолокации: $e. Показываем клиники для Астаны.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      });
     }
   }
 
+  // ... (методы _makePhoneCall, _openWhatsApp, _openWebsite, _openInMaps остаются без изменений) ...
   Future<void> _makePhoneCall(String phone) async {
-    final uri = Uri.parse('tel:+$phone');
+    // Google Places API возвращает телефон в формате "+7 7172 12 34 56"
+    // URL launcher ожидает "tel:+77172123456"
+    final uri = Uri.parse('tel:${phone.replaceAll(RegExp(r'[\s-]'), '')}');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
@@ -95,8 +104,10 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
   }
 
   Future<void> _openWhatsApp(String phone) async {
+    // Убираем + и пробелы
+    final simplePhone = phone.replaceAll(RegExp(r'[\s+]'), '');
     final message = 'Здравствуйте! Я обращаюсь через приложение GdePet. Мне нужна консультация.';
-    final uri = Uri.parse("https://wa.me/$phone?text=${Uri.encodeComponent(message)}");
+    final uri = Uri.parse("https://wa.me/$simplePhone?text=${Uri.encodeComponent(message)}");
     
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -123,7 +134,7 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             behavior: SnackBarBehavior.floating,
-            margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text('Не удалось открыть сайт'),
             backgroundColor: Colors.red,
           ),
@@ -134,7 +145,7 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
 
   Future<void> _openInMaps(VetClinic clinic) async {
     final uri = Uri.parse(
-      'https://www.google.com/maps/search/?api=1&query=${clinic.location.latitude},${clinic.location.longitude}'
+      'https://www.google.com/maps/search/?api=1&query=${clinic.location.latitude},${clinic.location.longitude}&query_place_id=${clinic.placeId}'
     );
     
     if (await canLaunchUrl(uri)) {
@@ -144,7 +155,7 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             behavior: SnackBarBehavior.floating,
-            margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text('Не удалось открыть карты'),
             backgroundColor: Colors.red,
           ),
@@ -153,10 +164,12 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        // ... (appBar без изменений) ...
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -186,49 +199,86 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
           ),
         ],
       ),
-      body: _showMapView ? _buildMapView() : _buildListView(),
+      // ИЗМЕНЕНИЕ: Основной контент теперь управляется FutureBuilder
+      body: _buildBody(),
     );
   }
 
-  Widget _buildListView() {
-    if (_clinics.isEmpty) {
+  Widget _buildBody() {
+    // 1. Сначала ждем геолокацию
+    if (_isLoadingLocation) {
       return const Center(
-        child: CircularProgressIndicator(
-          color: Color(0xFFEE8A9A),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: Color(0xFFEE8A9A)),
+            SizedBox(height: 16),
+            Text('Определение вашего местоположения...'),
+          ],
         ),
       );
     }
 
-    return Column(
-      children: [
-        if (_isLoadingLocation)
-          Container(
-            padding: const EdgeInsets.all(8),
-            color: Colors.orange.shade100,
-            child: const Row(
+    // 2. Геолокация получена, ждем загрузку клиник
+    return FutureBuilder<List<VetClinic>>(
+      future: _clinicsFuture,
+      builder: (context, snapshot) {
+        // 2.1. Загрузка...
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                SizedBox(width: 8),
-                Text('Определяем ваше местоположение...'),
+                CircularProgressIndicator(color: Color(0xFFEE8A9A)),
+                SizedBox(height: 16),
+                Text('Загрузка клиник поблизости...'),
               ],
             ),
-          ),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: _clinics.length,
-            itemBuilder: (context, index) {
-              final clinic = _clinics[index];
-              return _buildClinicCard(clinic);
-            },
-          ),
-        ),
-      ],
+          );
+        }
+
+        // 2.2. Ошибка
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Text(
+                'Ошибка загрузки клиник:\n${snapshot.error}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.red),
+              ),
+            ),
+          );
+        }
+
+        // 2.3. Данных нет (например, "ZERO_RESULTS" от Google)
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(
+            child: Text(
+              'Рядом не найдено ветеринарных клиник.',
+              style: TextStyle(color: Colors.grey, fontSize: 16),
+            ),
+          );
+        }
+
+        // 2.4. Успех! Сохраняем данные и отображаем
+        _clinics = snapshot.data!;
+        
+        return _showMapView ? _buildMapView() : _buildListView();
+      },
+    );
+  }
+
+
+  Widget _buildListView() {
+    // _clinics уже заполнена FutureBuilder'ом
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _clinics.length,
+      itemBuilder: (context, index) {
+        final clinic = _clinics[index];
+        return _buildClinicCard(clinic);
+      },
     );
   }
 
@@ -302,22 +352,7 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
                   ),
               ],
             ),
-            if (clinic.workingHours != null) ...[
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  const Icon(Icons.access_time, size: 16, color: Colors.grey),
-                  const SizedBox(width: 4),
-                  Text(
-                    clinic.workingHours!,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            // ИЗМЕНЕНИЕ: Убрали clinic.workingHours, т.к. API его не отдает
             if (clinic.rating != null) ...[
               const SizedBox(height: 4),
               Row(
@@ -339,6 +374,7 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
               spacing: 8,
               runSpacing: 8,
               children: [
+                // ИЗМЕНЕНИЕ: Скрываем кнопки, если данных нет
                 if (clinic.phone != null)
                   ElevatedButton.icon(
                     onPressed: () => _makePhoneCall(clinic.phone!),
@@ -356,7 +392,7 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
                       ),
                     ),
                   ),
-                if (clinic.whatsapp != null)
+                if (clinic.whatsapp != null) // (скорее всего будет null)
                   ElevatedButton.icon(
                     onPressed: () => _openWhatsApp(clinic.whatsapp!),
                     icon: const Icon(Icons.message, size: 18),
@@ -389,7 +425,7 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
                     ),
                   ),
                 ),
-                if (clinic.website != null)
+                if (clinic.website != null) // (скорее всего будет null)
                   OutlinedButton.icon(
                     onPressed: () => _openWebsite(clinic.website!),
                     icon: const Icon(Icons.language, size: 18),

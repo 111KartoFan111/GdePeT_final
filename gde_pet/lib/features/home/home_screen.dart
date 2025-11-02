@@ -306,7 +306,6 @@ class PetCard extends StatelessWidget {
                           )
                         : null,
                   ),
-                  // Статус питомца
                   Positioned(
                     top: 12,
                     left: 12,
@@ -337,7 +336,6 @@ class PetCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Кнопка избранного
                   Positioned(
                     top: 12,
                     right: 12,

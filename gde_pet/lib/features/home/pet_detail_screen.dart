@@ -58,12 +58,10 @@ class FullscreenImagePage extends StatelessWidget {
 
 class _PetDetailScreenState extends State<PetDetailScreen> {
 
-// Улучшенная функция "Поделиться" с поддержкой iOS/iPad
 void _sharePet() async {
   try {
     final pet = widget.pet;
     
-    // Формируем текст для отправки
     final statusEmoji = pet.status == PetStatus.lost ? '🆘' : '✅';
     final statusText = pet.status == PetStatus.lost ? 'Пропал(а)' : 'Найден(а)';
     
@@ -403,7 +401,6 @@ String _getMethodName(String method) {
 
     if (!mounted) return;
     
-    // Показываем индикатор загрузки
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -761,7 +758,6 @@ String _getMethodName(String method) {
                       ),
                     ),
 
-                    // 2. Основной контент (который будет скроллиться)
                     Expanded(
                       child: ListView(
                         controller: scrollController, // <--- ВАЖНО
