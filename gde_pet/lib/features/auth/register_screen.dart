@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../features/main_nav_shell.dart';
+// import '../../features/main_nav_shell.dart'; // <-- УДАЛЕНО
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -12,6 +12,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+// ... (контроллеры как и раньше)
   final _nameController = TextEditingController();
   final _surnameController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -20,6 +21,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
+// ... (dispose как и раньше)
     _nameController.dispose();
     _surnameController.dispose();
     _phoneController.dispose();
@@ -46,11 +48,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (mounted) {
       if (success) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const MainNavShell()),
-          (route) => false,
-        );
+        // --- ИЗМЕНЕНИЕ: УДАЛЕНА НАВИГАЦИЯ ---
+        // Navigator.pushAndRemoveUntil(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => const MainNavShell()),
+        //   (route) => false,
+        // );
+        // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Регистрация успешна! Проверьте email для подтверждения.'),
@@ -78,6 +83,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     return Scaffold(
       appBar: AppBar(
+// ... (appBar как и раньше)
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -93,6 +99,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+// ... (весь UI как и раньше)
                 Text(
                   'Создать аккаунт',
                   textAlign: TextAlign.center,

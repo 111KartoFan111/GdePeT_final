@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
-import '../main_nav_shell.dart';
+// import '../main_nav_shell.dart'; // <-- УДАЛЕНО
 import 'phone_login_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -12,12 +12,14 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+// ... (контроллеры как и раньше)
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
+// ... (dispose как и раньше)
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -33,11 +35,13 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (success && mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const MainNavShell()),
-        (route) => false,
-      );
+      // --- ИЗМЕНЕНИЕ: УДАЛЕНА НАВИГАЦИЯ ---
+      // Navigator.pushAndRemoveUntil(
+      //   context,
+      //   MaterialPageRoute(builder: (context) => const MainNavShell()),
+      //   (route) => false,
+      // );
+      // --- КОНЕЦ ИЗМЕНЕНИЯ ---
     } else if (authProvider.error != null && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -55,11 +59,13 @@ class _LoginScreenState extends State<LoginScreen> {
     final success = await authProvider.signInWithGoogle();
 
     if (success && mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const MainNavShell()),
-        (route) => false,
-      );
+      // --- ИЗМЕНЕНИЕ: УДАЛЕНА НАВИГАЦИЯ ---
+      // Navigator.pushAndRemoveUntil(
+      //   context,
+      //   MaterialPageRoute(builder: (context) => const MainNavShell()),
+      //   (route) => false,
+      // );
+      // --- КОНЕЦ ИЗМЕНЕНИЯ ---
     } else if (authProvider.error != null && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -74,6 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+// ... (build как и раньше)
     final authProvider = context.watch<AuthProvider>();
 
     return Scaffold(
@@ -234,6 +241,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
 void _showResetPasswordDialog() {
+// ... (этот метод не меняется)
   final emailController = TextEditingController();
   
   showDialog(
@@ -280,7 +288,7 @@ void _showResetPasswordDialog() {
                 ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   behavior: SnackBarBehavior.floating,
-                  margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
+                  margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
                   content: Text('Введите email'),
                   backgroundColor: Colors.orange,
                 ),
@@ -292,7 +300,7 @@ void _showResetPasswordDialog() {
                 ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   behavior: SnackBarBehavior.floating,
-                  margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
+                  margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
                   content: Text('Введите корректный email'),
                   backgroundColor: Colors.orange,
                 ),

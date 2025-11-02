@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
-import '../main_nav_shell.dart';
+// import '../main_nav_shell.dart'; // <-- УДАЛЕНО
 
 class EmailVerificationScreen extends StatefulWidget {
   const EmailVerificationScreen({super.key});
@@ -38,16 +38,19 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
       if (isVerified && mounted) {
         _timer?.cancel();
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const MainNavShell()),
-          (route) => false,
-        );
+        // --- ИЗМЕНЕНИЕ: УДАЛЕНА НАВИГАЦИЯ ---
+        // Navigator.pushAndRemoveUntil(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => const MainNavShell()),
+        //   (route) => false,
+        // );
+        // --- КОНЕЦ ИЗМЕНЕНИЯ ---
       }
     });
   }
 
   Future<void> _resendEmail() async {
+// ... (resend email как и раньше)
     final authProvider = context.read<AuthProvider>();
     await authProvider.sendEmailVerification();
 
@@ -55,7 +58,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
+          margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
           content: Text('Письмо отправлено повторно'),
           backgroundColor: Colors.green,
         ),
@@ -65,6 +68,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+// ... (build как и раньше)
     final authProvider = context.watch<AuthProvider>();
     final email = authProvider.user?.email ?? '';
 

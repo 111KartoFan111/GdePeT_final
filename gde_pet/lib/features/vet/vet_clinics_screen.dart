@@ -15,22 +15,21 @@ class VetClinicsScreen extends StatefulWidget {
 
 class _VetClinicsScreenState extends State<VetClinicsScreen> {
   LatLng? _currentLocation;
-  bool _isLoadingLocation = true; // ИЗМЕНЕНИЕ: Начинаем с загрузки
+  bool _isLoadingLocation = true;
   List<VetClinic> _clinics = [];
   bool _showMapView = false;
   final MapController _mapController = MapController();
 
-  // ИЗМЕНЕНИЕ: Добавили Future для FutureBuilder
   Future<List<VetClinic>>? _clinicsFuture;
   final VetClinicService _vetService = VetClinicService();
+
+  String? _loadingDetailsForClinicId;
 
   @override
   void initState() {
     super.initState();
     _getCurrentLocation();
   }
-
-  // ИЗМЕНЕНИЕ: Удалили _loadClinics()
 
   Future<void> _getCurrentLocation() async {
     setState(() {
@@ -55,16 +54,12 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
       setState(() {
         _currentLocation = LatLng(position.latitude, position.longitude);
         _isLoadingLocation = false;
-        // Запускаем загрузку клиник ПОСЛЕ получения геолокации
         _clinicsFuture = _vetService.fetchVetClinics(_currentLocation!);
       });
 
     } catch (e) {
       setState(() {
         _isLoadingLocation = false;
-        // Если не удалось получить геолокацию, 
-        // все равно запускаем поиск (API использует IP, если нет координат)
-        // или используем координаты по умолчанию (Астана)
         _currentLocation = LatLng(51.169392, 71.449074); // Центр Астаны
         _clinicsFuture = _vetService.fetchVetClinics(_currentLocation!);
 
@@ -82,10 +77,7 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
     }
   }
 
-  // ... (методы _makePhoneCall, _openWhatsApp, _openWebsite, _openInMaps остаются без изменений) ...
   Future<void> _makePhoneCall(String phone) async {
-    // Google Places API возвращает телефон в формате "+7 7172 12 34 56"
-    // URL launcher ожидает "tel:+77172123456"
     final uri = Uri.parse('tel:${phone.replaceAll(RegExp(r'[\s-]'), '')}');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -103,11 +95,13 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
     }
   }
 
-  Future<void> _openWhatsApp(String phone) async {
-    // Убираем + и пробелы
-    final simplePhone = phone.replaceAll(RegExp(r'[\s+]'), '');
-    final message = 'Здравствуйте! Я обращаюсь через приложение GdePet. Мне нужна консультация.';
-    final uri = Uri.parse("https://wa.me/$simplePhone?text=${Uri.encodeComponent(message)}");
+  // --- УДАЛЕН МЕТОД _openWhatsApp ---
+
+  Future<void> _openWebsite(String url) async {
+    // Добавляем https, если его нет
+    // *** ИСПРАВЛЕНИЕ: Переименована переменная ***
+    String urlToLaunch = url.startsWith('http') ? url : 'https://$url';
+    final uri = Uri.parse(urlToLaunch);
     
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -117,24 +111,6 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
           const SnackBar(
             behavior: SnackBarBehavior.floating,
             margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
-            content: Text('WhatsApp недоступен'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _openWebsite(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text('Не удалось открыть сайт'),
             backgroundColor: Colors.red,
           ),
@@ -155,7 +131,7 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
+            margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
             content: Text('Не удалось открыть карты'),
             backgroundColor: Colors.red,
           ),
@@ -164,12 +140,49 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
     }
   }
 
+  Future<VetClinic> _fetchClinicDetails(VetClinic clinic) async {
+    if (clinic.phone != null) return clinic;
+    if (_loadingDetailsForClinicId == clinic.id) return clinic;
+
+    setState(() {
+      _loadingDetailsForClinicId = clinic.id;
+    });
+
+    try {
+      final updatedClinic = await _vetService.getClinicDetails(clinic.placeId!, clinic);
+      
+      final index = _clinics.indexWhere((c) => c.id == clinic.id);
+      if (index != -1 && mounted) {
+        setState(() {
+          _clinics[index] = updatedClinic;
+        });
+      }
+      return updatedClinic;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
+            content: Text('Ошибка загрузки деталей: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return clinic;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingDetailsForClinicId = null;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // ... (appBar без изменений) ...
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -199,11 +212,10 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
           ),
         ],
       ),
-      // ИЗМЕНЕНИЕ: Основной контент теперь управляется FutureBuilder
       body: _buildBody(),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFFEE8A9A),
-        onPressed: _getCurrentLocation, // Вызывает обновление местоположения
+        onPressed: _getCurrentLocation,
         tooltip: 'Мое местоположение',
         child: _isLoadingLocation
             ? const SizedBox(
@@ -220,7 +232,6 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
   }
 
   Widget _buildBody() {
-    // 1. Сначала ждем геолокацию
     if (_isLoadingLocation) {
       return const Center(
         child: Column(
@@ -234,11 +245,9 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
       );
     }
 
-    // 2. Геолокация получена, ждем загрузку клиник
     return FutureBuilder<List<VetClinic>>(
       future: _clinicsFuture,
       builder: (context, snapshot) {
-        // 2.1. Загрузка...
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             child: Column(
@@ -252,7 +261,6 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
           );
         }
 
-        // 2.2. Ошибка
         if (snapshot.hasError) {
           return Center(
             child: Padding(
@@ -266,7 +274,6 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
           );
         }
 
-        // 2.3. Данных нет (например, "ZERO_RESULTS" от Google)
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const Center(
             child: Text(
@@ -276,8 +283,9 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
           );
         }
 
-        // 2.4. Успех! Сохраняем данные и отображаем
-        _clinics = snapshot.data!;
+        if (_clinics.isEmpty) {
+          _clinics = snapshot.data!;
+        }
         
         return _showMapView ? _buildMapView() : _buildListView();
       },
@@ -286,9 +294,8 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
 
 
   Widget _buildListView() {
-    // _clinics уже заполнена FutureBuilder'ом
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 80), // Отступ для FAB
       itemCount: _clinics.length,
       itemBuilder: (context, index) {
         final clinic = _clinics[index];
@@ -298,6 +305,8 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
   }
 
   Widget _buildClinicCard(VetClinic clinic) {
+    final bool isLoadingDetails = _loadingDetailsForClinicId == clinic.id;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
@@ -367,7 +376,7 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
                   ),
               ],
             ),
-            // ИЗМЕНЕНИЕ: Убрали clinic.workingHours, т.к. API его не отдает
+            
             if (clinic.rating != null) ...[
               const SizedBox(height: 4),
               Row(
@@ -384,17 +393,66 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
                 ],
               ),
             ],
+            
+            if (clinic.workingHours != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.access_time, size: 18, color: Colors.grey),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        clinic.workingHours!,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.black87,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            ],
+
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
-                // ИЗМЕНЕНИЕ: Скрываем кнопки, если данных нет
-                if (clinic.phone != null)
+                if (isLoadingDetails)
+                  const SizedBox(
+                    height: 36,
+                    child: Center(
+                      child: CircularProgressIndicator(color: Color(0xFFEE8A9A)),
+                    ),
+                  )
+                else
                   ElevatedButton.icon(
-                    onPressed: () => _makePhoneCall(clinic.phone!),
+                    onPressed: () async {
+                      final updatedClinic = await _fetchClinicDetails(clinic);
+                      if (updatedClinic.phone != null && mounted) {
+                        _makePhoneCall(updatedClinic.phone!);
+                      } else if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            behavior: SnackBarBehavior.floating,
+                            margin: EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
+                            content: Text('Номер телефона для этой клиники не найден'),
+                            backgroundColor: Colors.orange,
+                          ),
+                        );
+                      }
+                    },
                     icon: const Icon(Icons.phone, size: 18),
-                    label: const Text('Позвонить'),
+                    label: Text(clinic.phone != null ? clinic.phone! : 'Позвонить'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFEE8A9A),
                       foregroundColor: Colors.white,
@@ -407,23 +465,9 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
                       ),
                     ),
                   ),
-                if (clinic.whatsapp != null) // (скорее всего будет null)
-                  ElevatedButton.icon(
-                    onPressed: () => _openWhatsApp(clinic.whatsapp!),
-                    icon: const Icon(Icons.message, size: 18),
-                    label: const Text('WhatsApp'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF25D366),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                  ),
+
+                // --- ИСПРАВЛЕНИЕ: Удалена кнопка WhatsApp ---
+
                 OutlinedButton.icon(
                   onPressed: () => _openInMaps(clinic),
                   icon: const Icon(Icons.directions, size: 18),
@@ -440,7 +484,8 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
                     ),
                   ),
                 ),
-                if (clinic.website != null) // (скорее всего будет null)
+                
+                if (clinic.website != null)
                   OutlinedButton.icon(
                     onPressed: () => _openWebsite(clinic.website!),
                     icon: const Icon(Icons.language, size: 18),
@@ -456,7 +501,7 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                     ),
-                  ),
+                  )
               ],
             ),
           ],
@@ -481,7 +526,6 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
         ),
         MarkerLayer(
           markers: [
-            // Маркер текущей позиции пользователя
             if (_currentLocation != null)
               Marker(
                 point: _currentLocation!,
@@ -493,14 +537,16 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
                   size: 40,
                 ),
               ),
-            // Маркеры клиник
             ..._clinics.map((clinic) {
               return Marker(
                 point: clinic.location,
                 width: 40,
                 height: 40,
                 child: GestureDetector(
-                  onTap: () {
+                  onTap: () async {
+                    final updatedClinic = await _fetchClinicDetails(clinic);
+                    if (!mounted) return;
+                    
                     showModalBottomSheet(
                       context: context,
                       builder: (context) => Container(
@@ -510,23 +556,23 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              clinic.name,
+                              updatedClinic.name,
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             const SizedBox(height: 8),
-                            Text(clinic.address),
+                            Text(updatedClinic.address),
                             const SizedBox(height: 16),
                             Row(
                               children: [
-                                if (clinic.phone != null)
+                                if (updatedClinic.phone != null)
                                   Expanded(
                                     child: ElevatedButton.icon(
                                       onPressed: () {
                                         Navigator.pop(context);
-                                        _makePhoneCall(clinic.phone!);
+                                        _makePhoneCall(updatedClinic.phone!);
                                       },
                                       icon: const Icon(Icons.phone),
                                       label: const Text('Позвонить'),
@@ -535,12 +581,13 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
                                       ),
                                     ),
                                   ),
-                                const SizedBox(width: 8),
+                                if (updatedClinic.phone != null)
+                                  const SizedBox(width: 8),
                                 Expanded(
                                   child: ElevatedButton.icon(
                                     onPressed: () {
                                       Navigator.pop(context);
-                                      _openInMaps(clinic);
+                                      _openInMaps(updatedClinic);
                                     },
                                     icon: const Icon(Icons.directions),
                                     label: const Text('Маршрут'),
@@ -570,3 +617,4 @@ class _VetClinicsScreenState extends State<VetClinicsScreen> {
     );
   }
 }
+

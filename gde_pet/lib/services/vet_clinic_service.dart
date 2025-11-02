@@ -5,7 +5,7 @@ import '../models/vet_clinic_model.dart';
 
 class VetClinicService {
   
-  static const String _apiKey = ""; 
+  static const String _apiKey = "ПОМЕСТИТЕ_СЮДА_ВАШ_API_КЛЮЧ_GOOGLE_PLACES"; 
   // -------------------------------------------
 
   final String _nearbySearchUrl = 

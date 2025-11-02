@@ -8,6 +8,7 @@ import 'package:gde_pet/providers/profile_provider.dart';
 import 'package:gde_pet/providers/pet_provider.dart';
 import 'package:gde_pet/providers/favorites_provider.dart';
 import 'package:gde_pet/firebase_options.dart';
+import 'package:gde_pet/features/auth/email_verification_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,16 +64,18 @@ class MyApp extends StatelessWidget {
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
 
-  // ИЗМЕНЕНИЕ: Добавляем метод для загрузки данных
-  Future<void> _loadInitialUserData(BuildContext context, String uid) async {
-    // Используем context.read, так как нам не нужно слушать изменения здесь
+  // --- ИСПРАВЛЕНИЕ: Убираем Future/await и loadProfile ---
+  void _loadInitialUserData(BuildContext context, String uid) {
     final profileProvider = context.read<ProfileProvider>();
+    final favoritesProvider = context.read<FavoritesProvider>();
+    
+    // Загружаем/подписываемся, только если профиль не загружен
     if (profileProvider.profile == null || profileProvider.profile!.uid != uid) {
-      // Загружаем профиль
-      await profileProvider.loadProfile(uid);
-      // Подписываемся на будущие обновления
+      // Вызываем subscribeToProfile, который теперь управляет isLoading
       profileProvider.subscribeToProfile(uid);
     }
+    // Загружаем избранное
+    favoritesProvider.loadFavorites(uid);
   }
 
   @override
@@ -80,26 +83,39 @@ class AuthWrapper extends StatelessWidget {
     final authProvider = context.watch<AuthProvider>();
 
     if (authProvider.isAuthenticated) {
-      // Пользователь вошел, теперь нам нужно убедиться, что профиль загружен
-      return FutureBuilder(
-        future: _loadInitialUserData(context, authProvider.user!.uid),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(
-                  color: Color(0xFFEE8A9A),
-                ),
-              ),
-            );
-          }
-          
-          // Профиль загружен, показываем главный экран
-          return const MainNavShell();
-        },
-      );
+      final user = authProvider.user!;
+      final isEmailPasswordUser = user.providerData.any((p) => p.providerId == 'password');
+
+      if (isEmailPasswordUser && !user.emailVerified) {
+        return const EmailVerificationScreen();
+      }
+
+      // --- ИСПРАВЛЕНИЕ: Убираем FutureBuilder и используем watch ---
+      
+      // 1. Вызываем загрузку данных
+      _loadInitialUserData(context, user.uid);
+      
+      // 2. Слушаем ProfileProvider
+      final profileProvider = context.watch<ProfileProvider>();
+
+      // 3. Показываем загрузку, пока isLoading или profile == null
+      if (profileProvider.isLoading || profileProvider.profile == null) {
+        return const Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(
+              color: Color(0xFFEE8A9A),
+            ),
+          ),
+        );
+      }
+      
+      // 4. Профиль загружен, показываем главный экран
+      return const MainNavShell();
+      // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
     }
 
+    // Пользователь не авторизован
     return const WelcomeScreen();
   }
 }
+

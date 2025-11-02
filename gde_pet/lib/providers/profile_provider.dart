@@ -14,21 +14,6 @@ class ProfileProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  // Загрузить профиль
-  Future<void> loadProfile(String uid) async {
-    try {
-      _setLoading(true);
-      _error = null;
-
-      _profile = await _profileService.getProfile(uid);
-
-      _setLoading(false);
-    } catch (e) {
-      _error = e.toString();
-      _setLoading(false);
-    }
-  }
-
   // Обновить профиль
   Future<bool> updateProfile({
     required String uid,
@@ -121,11 +106,37 @@ class ProfileProvider extends ChangeNotifier {
 
   // Подписаться на обновления профиля
   void subscribeToProfile(String uid) {
+    // Если уже подписаны на этого пользователя, выходим
+    if (_profile != null && _profile!.uid == uid && !_isLoading) return; 
+    
+    print("Subscribing to profile for UID: $uid");
+    _setLoading(true); // Устанавливаем загрузку
+    _error = null;
+    
     _profileService.getProfileStream(uid).listen((profile) {
+      print("Profile stream update received: ${profile?.displayName}");
+      
+      // --- ИСПРАВЛЕНИЕ ---
+      // Мы считаем загрузку завершенной (isLoading = false)
+      // ТОЛЬКО когда получили настоящий профиль (profile != null).
+      // Если пришел null (документ еще не создан), мы продолжаем
+      // ждать (isLoading = true) следующего события из потока.
       if (profile != null) {
         _profile = profile;
+        _isLoading = false; // Загрузка завершена
         notifyListeners();
+      } else {
+        // Документ еще не создан в Firestore.
+        // Ничего не делаем, _isLoading остается true.
+        print("Profile stream received null, waiting for doc creation...");
       }
+      // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
+      
+    }, onError: (e) {
+      print("Error in profile stream: $e");
+      _error = e.toString();
+      _isLoading = false; // Завершаем загрузку при ошибке
+      notifyListeners();
     });
   }
 
@@ -145,3 +156,4 @@ class ProfileProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
+
