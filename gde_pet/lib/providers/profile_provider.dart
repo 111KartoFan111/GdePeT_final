@@ -116,18 +116,16 @@ class ProfileProvider extends ChangeNotifier {
     _profileService.getProfileStream(uid).listen((profile) {
       print("Profile stream update received: ${profile?.displayName}");
       
-      // --- ИСПРАВЛЕНИЕ ---
-      // Мы считаем загрузку завершенной (isLoading = false)
-      // ТОЛЬКО когда получили настоящий профиль (profile != null).
-      // Если пришел null (документ еще не создан), мы продолжаем
-      // ждать (isLoading = true) следующего события из потока.
-      if (profile != null) {
-        _profile = profile;
-        _isLoading = false; // Загрузка завершена
-        notifyListeners();
-      } else {
-        // Документ еще не создан в Firestore.
-        // Ничего не делаем, _isLoading остается true.
+      // --- ИСПРАВЛЕНИЕ: (убираем if) ---
+      // Мы всегда обновляем профиль (даже если пришел null)
+      // и ВСЕГДА выключаем загрузку.
+      // AuthWrapper в main.dart все равно будет показывать
+      // загрузку, если profile == null.
+      _profile = profile;
+      _isLoading = false; // Загрузка завершена
+      notifyListeners();
+      
+      if (profile == null) {
         print("Profile stream received null, waiting for doc creation...");
       }
       // --- КОНЕЦ ИСПРАВЛЕНИЯ ---

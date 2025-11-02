@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
-// import '../../features/main_nav_shell.dart'; // <-- УДАЛЕНО
+import 'email_verification_screen.dart'; // <-- ДОБАВЛЕНО
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -12,7 +12,6 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-// ... (контроллеры как и раньше)
   final _nameController = TextEditingController();
   final _surnameController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -48,12 +47,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (mounted) {
       if (success) {
-        // --- ИЗМЕНЕНИЕ: УДАЛЕНА НАВИГАЦИЯ ---
-        // Navigator.pushAndRemoveUntil(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => const MainNavShell()),
-        //   (route) => false,
-        // );
+        // --- ИЗМЕНЕНИЕ: Возвращаем навигацию ---
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const EmailVerificationScreen()),
+        );
         // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -99,7 +97,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-// ... (весь UI как и раньше)
                 Text(
                   'Создать аккаунт',
                   textAlign: TextAlign.center,
@@ -254,3 +251,4 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 }
+

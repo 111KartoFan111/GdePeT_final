@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
-// import '../main_nav_shell.dart'; // <-- УДАЛЕНО
+import '../main_nav_shell.dart'; // <-- ДОБАВЛЕНО
 
 class EmailVerificationScreen extends StatefulWidget {
   const EmailVerificationScreen({super.key});
@@ -38,12 +38,12 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
       if (isVerified && mounted) {
         _timer?.cancel();
-        // --- ИЗМЕНЕНИЕ: УДАЛЕНА НАВИГАЦИЯ ---
-        // Navigator.pushAndRemoveUntil(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => const MainNavShell()),
-        //   (route) => false,
-        // );
+        // --- ИЗМЕНЕНИЕ: Возвращаем навигацию ---
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const MainNavShell()),
+          (route) => false,
+        );
         // --- КОНЕЦ ИЗМЕНЕНИЯ ---
       }
     });
@@ -153,3 +153,4 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     );
   }
 }
+
