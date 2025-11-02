@@ -29,37 +29,31 @@ class _PetListScreenState extends State<PetListScreen> {
   @override
   void initState() {
     super.initState();
-    // Используем addPostFrameCallback для безопасного доступа к provider
-    // при первой загрузке
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadAndFilterPets();
     });
   }
 
-  // Этот метод будет вызываться при изменении зависимостей (например, при обновлении PetProvider)
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _loadAndFilterPets();
   }
 
-  // Загружает базовый список из провайдера
   void _loadAndFilterPets() {
     final petProvider = context.read<PetProvider>();
     final newPetList = petProvider.pets
         .where((p) => p.status == widget.status && p.isActive)
         .toList();
     
-    // Проверяем, изменился ли список, чтобы избежать лишних перестроений
     if (newPetList.length != _allPets.length || !_listsAreEqual(newPetList, _allPets)) {
       setState(() {
         _allPets = newPetList;
-        _applyFiltersAndSort(); // Применяем текущие фильтры
+        _applyFiltersAndSort();
       });
     }
   }
   
-  // Хелпер для проверки, изменился ли список
   bool _listsAreEqual(List<PetModel> a, List<PetModel> b) {
     if (a.length != b.length) return false;
     for (int i = 0; i < a.length; i++) {
@@ -68,17 +62,13 @@ class _PetListScreenState extends State<PetListScreen> {
     return true;
   }
 
-
-  // Применяет фильтры и сортировку к _allPets и сохраняет в _filteredPets
   void _applyFiltersAndSort() {
     List<PetModel> tempPets = List.from(_allPets);
 
-    // 1. Фильтр по типу
     if (_petTypeFilter != null) {
       tempPets = tempPets.where((p) => p.type == _petTypeFilter).toList();
     }
 
-    // 2. Сортировка
     if (_sortBy == _SortBy.newest) {
       tempPets.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     } else {
@@ -114,7 +104,6 @@ class _PetListScreenState extends State<PetListScreen> {
         ),
         centerTitle: true,
         actions: [
-          // Кнопка переключения вида (Сетка/Список)
           IconButton(
             icon: Icon(
               _viewMode == _ViewMode.grid ? Icons.list : Icons.grid_view,
@@ -132,9 +121,7 @@ class _PetListScreenState extends State<PetListScreen> {
       ),
       body: Column(
         children: [
-          // Панель фильтров и сортировки
           _buildFilterBar(),
-          // Отображение контента
           if (petProvider.isLoading && _filteredPets.isEmpty)
             const Expanded(
               child: Center(
@@ -165,13 +152,11 @@ class _PetListScreenState extends State<PetListScreen> {
     );
   }
 
-  // Виджет для панели фильтров
   Widget _buildFilterBar() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Column(
         children: [
-          // Сортировка
           Container(
             height: 50,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -212,13 +197,12 @@ class _PetListScreenState extends State<PetListScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          // Фильтры по типу (чипы)
           SizedBox(
             height: 40,
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
-                _buildFilterChip(null, 'Все'), // "Все"
+                _buildFilterChip(null, 'Все'),
                 ...PetType.values.map((type) {
                   return _buildFilterChip(type, type.displayName);
                 }).toList(),
@@ -230,7 +214,6 @@ class _PetListScreenState extends State<PetListScreen> {
     );
   }
 
-  // Виджет для одного чипа фильтра
   Widget _buildFilterChip(PetType? type, String label) {
     final isSelected = _petTypeFilter == type;
     return Padding(
@@ -259,7 +242,6 @@ class _PetListScreenState extends State<PetListScreen> {
     );
   }
 
-  // Виджет для отображения сеткой
   Widget _buildGridView() {
     return GridView.builder(
       padding: const EdgeInsets.all(16.0),
@@ -267,31 +249,24 @@ class _PetListScreenState extends State<PetListScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 0.85, // Соотношение сторон из user_pets_screen
+        mainAxisExtent: 280, // ИЗМЕНЕНО: Задаем высоту явно
       ),
       itemCount: _filteredPets.length,
       itemBuilder: (context, index) {
         final pet = _filteredPets[index];
-        return PetCard(
-          petModel: pet,
-          color: pet.status == PetStatus.lost
-              ? const Color(0xFFEE8A9A)
-              : const Color(0xFFD6C9FF),
-          title: pet.petName,
-          location: pet.address ?? 'На карте',
-        );
+        // ИЗМЕНЕНО: Используем PetListItem вместо PetCard
+        return PetListItem(pet: pet);
       },
     );
   }
 
-  // Виджет для отображения списком
   Widget _buildListView() {
     return ListView.builder(
       padding: const EdgeInsets.all(16.0),
       itemCount: _filteredPets.length,
       itemBuilder: (context, index) {
         final pet = _filteredPets[index];
-        return PetListItem(pet: pet); // Используем новый виджет
+        return PetListItem(pet: pet);
       },
     );
   }

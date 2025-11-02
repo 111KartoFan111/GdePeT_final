@@ -652,6 +652,106 @@ String _getMethodName(String method) {
     }
   }
 
+  // --- НОВЫЙ МЕТОД ДЛЯ КАРТЫ ---
+  Future<void> _openOnMap() async {
+    final pet = widget.pet;
+    if (pet.latitude == null || pet.longitude == null) return;
+
+    final lat = pet.latitude!;
+    final lon = pet.longitude!;
+    
+    // Используем Google Maps URL
+    final uri = Uri.parse('https://maps.google.com/?q=$lat,$lon');
+    
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        throw 'Could not launch $uri';
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Не удалось открыть карту: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 80.0, left: 16.0, right: 16.0),
+          ),
+        );
+      }
+    }
+  }
+  
+  // --- НОВЫЙ WIDGET ДЛЯ КАРТОЧКИ ЛОКАЦИИ ---
+  Widget _buildLocationCard() {
+    final pet = widget.pet;
+    bool hasMapLocation = pet.latitude != null && pet.longitude != null;
+    bool hasAddress = pet.address != null && pet.address!.isNotEmpty;
+
+    // Если нет никакой информации о месте, не показываем карточку
+    if (!hasMapLocation && !hasAddress) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Местоположение',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(Icons.location_on_outlined, color: Colors.grey[700], size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  hasAddress ? pet.address! : 'Отмечено на карте',
+                  style: TextStyle(fontSize: 15, color: Colors.grey[800]),
+                ),
+              ),
+            ],
+          ),
+          // Показываем кнопку "Показать на карте" только если есть координаты
+          if (hasMapLocation) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton.icon(
+                onPressed: _openOnMap,
+                icon: const Icon(Icons.map_outlined, color: Colors.white),
+                label: const Text(
+                  'Показать на карте',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFEE8A9A),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
@@ -803,6 +903,10 @@ String _getMethodName(String method) {
                               height: 1.4,
                             ),
                           ),
+                          
+                          // --- ДОБАВЛЕНА КАРТОЧКА ЛОКАЦИИ ---
+                          _buildLocationCard(),
+                          
                           // Добавим отступ снизу, чтобы текст не прилипал к кнопкам
                           const SizedBox(height: 24), 
                         ],

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:gde_pet/features/home/home_screen.dart';
-import 'package:gde_pet/features/map/map_screen.dart'; 
-import 'package:gde_pet/features/add/add_screen.dart'; 
+import 'package:gde_pet/features/map/map_screen.dart';
+// import 'package:gde_pet/features/add/add_screen.dart'; // <-- УДАЛЕНО
+import 'package:gde_pet/features/add/add_pet_screen.dart'; // <-- ДОБАВЛЕНО
 import 'package:gde_pet/features/profile/profile_screen.dart';
 import 'package:gde_pet/features/messenger/messenger_screen.dart';
 
@@ -18,10 +19,19 @@ class _MainNavShellState extends State<MainNavShell> {
   static const List<Widget> _widgetOptions = <Widget>[
     HomeScreen(),
     MapScreen(),
-    AddScreen(),
+    // AddScreen(), // <-- УДАЛЕНО
     MessengerScreen(),
     ProfileScreen(),
   ];
+
+  // +++ ДОБАВЛЕН МЕТОД +++
+  void _openAddPetScreen(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AddPetScreen()),
+    );
+  }
+  // +++ КОНЕЦ +++
 
   Widget _buildNavItem(int index, IconData icon, String label) {
     final isSelected = _selectedIndex == index;
@@ -62,7 +72,8 @@ class _MainNavShellState extends State<MainNavShell> {
 
   Widget _buildAddButton() {
     return GestureDetector(
-      onTap: () => setState(() => _selectedIndex = 2),
+      // onTap: () => setState(() => _selectedIndex = 2), // <-- ИЗМЕНЕНО
+      onTap: () => _openAddPetScreen(context), // <-- ИЗМЕНЕНО
       child: Container(
         width: 56,
         height: 56,
@@ -112,11 +123,12 @@ class _MainNavShellState extends State<MainNavShell> {
             _buildNavItem(0, Icons.home_rounded, 'Главная'),
             _buildNavItem(1, Icons.map_rounded, 'Карта'),
             _buildAddButton(),
-            _buildNavItem(3, Icons.chat_rounded, 'Чаты'),
-            _buildNavItem(4, Icons.person_rounded, 'Профиль'),
+            _buildNavItem(2, Icons.chat_rounded, 'Чаты'), // <-- ИЗМЕНЕНО (было 3)
+            _buildNavItem(3, Icons.person_rounded, 'Профиль'), // <-- ИЗМЕНЕНО (было 4)
           ],
         ),
       ),
     );
   }
 }
+
