@@ -35,13 +35,11 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (success && mounted) {
-      // --- ИЗМЕНЕНИЕ: УДАЛЕНА НАВИГАЦИЯ ---
-      // Navigator.pushAndRemoveUntil(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => const MainNavShell()),
-      //   (route) => false,
-      // );
-      // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/',
+        (route) => false,
+      );
     } else if (authProvider.error != null && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -59,13 +57,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final success = await authProvider.signInWithGoogle();
 
     if (success && mounted) {
-      // --- ИЗМЕНЕНИЕ: УДАЛЕНА НАВИГАЦИЯ ---
-      // Navigator.pushAndRemoveUntil(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => const MainNavShell()),
-      //   (route) => false,
-      // );
-      // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/',
+        (route) => false,
+      );
     } else if (authProvider.error != null && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

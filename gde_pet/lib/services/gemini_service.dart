@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 class GeminiService {
   // ВАЖНО: API-ключ должен быть пустой строкой.
   // Платформа Canvas автоматически предоставит его во время выполнения.
-  static const String _apiKey = ""; 
+  static const String _apiKey = "AIzaSyBIj19MI4ZP62weBjqD05OLmdrAmLRINns"; 
   static const String _model = "gemini-2.5-flash-preview-09-2025";
   static const String _apiUrl =
       'https://generativelanguage.googleapis.com/v1beta/models/$_model:generateContent?key=$_apiKey';
