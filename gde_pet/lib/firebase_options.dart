@@ -44,11 +44,13 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions iosOptions = FirebaseOptions(
-    apiKey: 'AIzaSyDCIGp0-LB_L4_lH7VR0FI5XrZ68Ww7doM',
-    appId: '1:777709444767:ios:ac1bb136d635ea9f130caa',
+    apiKey: 'AIzaSyD_fL8IPn5mj5obAcMogAtqDHqPK7BG-CI',
+    appId: '1:777709444767:ios:b686af5d31e0689c130caa',
     messagingSenderId: '777709444767',
     projectId: 'gde-pet',
     storageBucket: 'gde-pet.firebasestorage.app',
-    iosBundleId: 'com.zharkynismagulov.gdePet',
+    iosClientId: '777709444767-okbo2hq38eu993efcsngq455qcvgedsl.apps.googleusercontent.com',
+    iosBundleId: 'com.adinaadilova.gdePet',
   );
+
 }

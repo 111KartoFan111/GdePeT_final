@@ -5,7 +5,7 @@ import '../models/vet_clinic_model.dart';
 
 class VetClinicService {
   
-  static const String _apiKey = "AIzaSyBe6xoNscPWyiazNOtxarRLCc4fFjHKx8w"; 
+  static const String _apiKey = "AIzaSyCjtTKN22enXFSJAc2Q6CV6-ztSxgDANPM"; 
   // -------------------------------------------
 
   final String _nearbySearchUrl = 

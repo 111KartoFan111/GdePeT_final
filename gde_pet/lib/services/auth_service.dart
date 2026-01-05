@@ -6,6 +6,12 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
+  static const String _emailActionUrl = 'https://gde-pet.firebaseapp.com/__/auth/action';
+
+  ActionCodeSettings get _emailActionCodeSettings => ActionCodeSettings(
+        url: _emailActionUrl,
+        handleCodeInApp: false,
+      );
 
   // Получить текущего пользователя
   User? get currentUser => _auth.currentUser;
@@ -39,7 +45,7 @@ class AuthService {
       print("AuthService: DisplayName updated to: $displayName");
 
       // Отправляем письмо для верификации
-      await credential.user?.sendEmailVerification();
+      await credential.user?.sendEmailVerification(_emailActionCodeSettings);
       print("AuthService: Verification email sent");
 
       // ВАЖНО: Сохраняем данные в Firestore СРАЗУ после регистрации
@@ -202,7 +208,7 @@ class AuthService {
   Future<void> sendEmailVerification() async {
     final user = _auth.currentUser;
     if (user != null && !user.emailVerified) {
-      await user.sendEmailVerification();
+      await user.sendEmailVerification(_emailActionCodeSettings);
     }
   }
 

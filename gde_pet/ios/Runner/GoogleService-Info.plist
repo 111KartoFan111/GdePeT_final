@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>777709444767-7t3qohd93lc66a6298ns24n2gke97dtq.apps.googleusercontent.com</string>
+	<string>777709444767-okbo2hq38eu993efcsngq455qcvgedsl.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.777709444767-7t3qohd93lc66a6298ns24n2gke97dtq</string>
+	<string>com.googleusercontent.apps.777709444767-okbo2hq38eu993efcsngq455qcvgedsl</string>
 	<key>API_KEY</key>
-	<string>AIzaSyDCIGp0-LB_L4_lH7VR0FI5XrZ68Ww7doM</string>
+	<string>AIzaSyD_fL8IPn5mj5obAcMogAtqDHqPK7BG-CI</string>
 	<key>GCM_SENDER_ID</key>
 	<string>777709444767</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.zharkynismagulov.gdePet</string>
+	<string>com.adinaadilova.gdePet</string>
 	<key>PROJECT_ID</key>
 	<string>gde-pet</string>
 	<key>STORAGE_BUCKET</key>
@@ -29,6 +29,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:777709444767:ios:ac1bb136d635ea9f130caa</string>
+	<string>1:777709444767:ios:b686af5d31e0689c130caa</string>
 </dict>
 </plist>

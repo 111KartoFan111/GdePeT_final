@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "777709444767",
+    "project_id": "gde-pet",
+    "storage_bucket": "gde-pet.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:777709444767:android:6310c7b41f6004a4130caa",
+        "android_client_info": {
+          "package_name": "com.example.gde_pet"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "777709444767-jlrfbqt7rslptogunkg707t1jl7msl2g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbld5NyhhcZEzkvXMm5zK7jLEoYfBtgjU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "777709444767-6bj11egc3hh51i85rsbtu88nhnc1m6og.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "777709444767-g26ipjrs19hi14t9ic80fqic7cnu47e2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.adinaadilova.gdePet"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
