@@ -7,7 +7,7 @@
 	<key>REVERSED_CLIENT_ID</key>
 	<string>com.googleusercontent.apps.777709444767-okbo2hq38eu993efcsngq455qcvgedsl</string>
 	<key>API_KEY</key>
-	<string>AIzaSyD_fL8IPn5mj5obAcMogAtqDHqPK7BG-CI</string>
+	<string>YOUR_FIREBASE_IOS_API_KEY_HERE</string>
 	<key>GCM_SENDER_ID</key>
 	<string>777709444767</string>
 	<key>PLIST_VERSION</key>

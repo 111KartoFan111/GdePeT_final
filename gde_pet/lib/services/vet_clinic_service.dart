@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/vet_clinic_model.dart';
 
 class VetClinicService {
   
-  static const String _apiKey = "AIzaSyCjtTKN22enXFSJAc2Q6CV6-ztSxgDANPM"; 
+  static String get _apiKey =>
+      dotenv.env['GOOGLE_PLACES_API_KEY'] ?? 'YOUR_GOOGLE_PLACES_API_KEY_HERE';
   // -------------------------------------------
 
   final String _nearbySearchUrl = 

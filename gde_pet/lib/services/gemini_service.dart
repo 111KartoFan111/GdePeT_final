@@ -1,13 +1,15 @@
 import 'dart:convert';
 import 'package:gde_pet/models/pet_model.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GeminiService {
   // ВАЖНО: API-ключ должен быть пустой строкой.
   // Платформа Canvas автоматически предоставит его во время выполнения.
-  static const String _apiKey = "AIzaSyBWQr3iRonHpk07ZYJ22r2j3IhEP-W-pdM"; 
+  static String get _apiKey =>
+      dotenv.env['GEMINI_API_KEY'] ?? 'YOUR_GEMINI_API_KEY_HERE';
   static const String _model = "gemini-2.5-flash-preview-09-2025";
-  static const String _apiUrl =
+  static String get _apiUrl =>
       'https://generativelanguage.googleapis.com/v1beta/models/$_model:generateContent?key=$_apiKey';
 
   static Future<String> generateDescription({

@@ -29,14 +29,12 @@ class ChatService {
   }
 
   Future<void> sendMessage(String chatId, MessageModel message) async {
-    // Add message to subcollection
     await _firestore
         .collection('chats')
         .doc(chatId)
         .collection('messages')
         .add(message.toJson());
 
-    // Update last message on the chat document
     await _firestore.collection('chats').doc(chatId).update({
       'lastMessage': message.text,
       'lastMessageTimestamp': message.timestamp,
@@ -49,7 +47,6 @@ class ChatService {
     DocumentSnapshot chatDoc = await _firestore.collection('chats').doc(chatId).get();
 
     if (!chatDoc.exists) {
-      // Get user profiles to store names and photos for the chat list
       DocumentSnapshot currentUserDoc = await _firestore.collection('users').doc(currentUserId).get();
       DocumentSnapshot receiverUserDoc = await _firestore.collection('users').doc(receiverId).get();
       
@@ -57,7 +54,6 @@ class ChatService {
         throw Exception("User profile not found");
       }
       
-      // ИСПРАВЛЕНИЕ: Безопасное получение данных и проверка createdAt
       final currentUserData = currentUserDoc.data() as Map<String, dynamic>;
       final receiverUserData = receiverUserDoc.data() as Map<String, dynamic>;
 

@@ -9,9 +9,11 @@ import 'package:gde_pet/providers/pet_provider.dart';
 import 'package:gde_pet/providers/favorites_provider.dart';
 import 'package:gde_pet/firebase_options.dart';
 import 'package:gde_pet/features/auth/email_verification_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env');
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
